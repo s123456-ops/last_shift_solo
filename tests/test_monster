@@ -80,3 +80,19 @@ def test_is_chasing_reflects_the_current_state():
     assert not monster.is_chasing
     monster.step(SEEN_WITH_LIGHT)
     assert monster.is_chasing
+
+def test_hidden_player_is_not_perceived_by_a_patrolling_monster():
+    monster = make_monster()
+    hidden = Situation(player_cell=(1, 2), player_running=False, flashlight_on=False,
+                       player_hidden=True)
+    monster.step(hidden)
+    assert isinstance(monster.state, Patrol)
+
+
+def test_monster_that_saw_the_player_hide_keeps_chasing():
+    monster = make_monster()
+    monster.step(SEEN_WITH_LIGHT)
+    hidden = Situation(player_cell=(1, 2), player_running=False, flashlight_on=False,
+                       player_hidden=True)
+    monster.step(hidden)
+    assert isinstance(monster.state, Chase)

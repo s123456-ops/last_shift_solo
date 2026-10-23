@@ -20,7 +20,8 @@ class ItemStyle:
 
     color: object
     scale: tuple[float, float, float]
-    height: float  # hauteur du centre de l'objet au-dessus du sol
+    height: float
+    solid: bool = False  # un objet solide bloque le joueur
 
 
 FUSE_STYLE = ItemStyle(color.yellow, (0.25, 0.25, 0.25), 1.0)
@@ -29,6 +30,7 @@ NOTE_STYLE = ItemStyle(color.white, (0.3, 0.02, 0.4), 0.9)
 BATTERY_STYLE = ItemStyle(color.orange, (0.15, 0.3, 0.15), 0.9)
 EXIT_STYLE = ItemStyle(color.green, (0.9, 2.4, 0.9), 1.2)
 DOCUMENT_STYLE = ItemStyle(color.light_gray, (0.25, 0.02, 0.32), 0.9)
+LOCKER_STYLE = ItemStyle(color.dark_gray, (0.9, 2.2, 0.9), 1.1, solid=True)
 
 
 class LevelRenderer:
@@ -97,6 +99,7 @@ class LevelRenderer:
         ]
         placements += [(cell, BATTERY_STYLE) for cell in level.battery_cells]
         placements += [(cell, DOCUMENT_STYLE) for cell in level.document_cells]
+        placements += [(cell, LOCKER_STYLE) for cell in level.hiding_spot_cells]
         for cell, style in placements:
             self._items[cell] = self._spawn_item(cell, style)
 
@@ -108,5 +111,6 @@ class LevelRenderer:
                 position=cell_to_world(cell, style.height),
                 scale=style.scale,
                 color=style.color,
+                collider="box" if style.solid else None,
             )
         )

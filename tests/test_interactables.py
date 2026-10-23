@@ -1,7 +1,7 @@
 import pytest
 
 from core.flashlight import Flashlight
-from core.interactables import BatteryPickup, Interactable, Interactions
+from core.interactables import BatteryPickup, HidingSpot, Interactable, Interactions
 from core.player import Player
 from core.stamina import Stamina
 
@@ -50,3 +50,32 @@ def test_two_items_on_the_same_cell_raise():
 def test_interactable_cannot_be_created_directly():
     with pytest.raises(TypeError):
         Interactable((0, 0))
+
+
+def test_hiding_spot_hides_then_releases_the_player():
+    player = make_player_with_low_battery()
+    locker = HidingSpot((3, 3))
+    locker.interact(player)
+    assert player.is_hidden
+    locker.interact(player)
+    assert not player.is_hidden
+
+
+def test_hiding_turns_the_flashlight_off():
+    player = make_player_with_low_battery()
+    assert player.flashlight.is_on
+    HidingSpot((3, 3)).interact(player)
+    assert not player.flashlight.is_on
+
+
+def test_hiding_spot_prompt_changes_when_occupied():
+    locker = HidingSpot((3, 3))
+    assert locker.prompt == "Se cacher dans le casier"
+    locker.interact(make_player_with_low_battery())
+    assert locker.prompt == "Sortir du casier"
+
+
+def test_hiding_spot_is_never_consumed():
+    locker = HidingSpot((3, 3))
+    locker.interact(make_player_with_low_battery())
+    assert not locker.is_consumed

@@ -60,6 +60,27 @@ class BatteryPickup(Interactable):
         return "Pile insérée dans la lampe."
 
 
+class HidingSpot(Interactable):
+    """Un casier où se cacher. Il n'est jamais consommé : on peut y revenir."""
+
+    def __init__(self, cell: Cell) -> None:
+        super().__init__(cell)
+        self._occupied = False
+
+    @property
+    def prompt(self) -> str:
+        return "Sortir du casier" if self._occupied else "Se cacher dans le casier"
+
+    def interact(self, player: Player) -> str:
+        if self._occupied:
+            self._occupied = False
+            player.leave_hiding()
+            return "Vous sortez du casier."
+        self._occupied = True
+        player.hide(self.cell)
+        return "Vous retenez votre souffle..."
+
+
 class Interactions:
     """Les objets du niveau, retrouvés par leur case."""
 

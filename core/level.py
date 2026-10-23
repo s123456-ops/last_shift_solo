@@ -56,6 +56,7 @@ class FacilityMap:
     document_cells: tuple[Cell, ...]
     emergency_light_cells: tuple[Cell, ...]
     hiding_spot_cells: tuple[Cell, ...]
+
     @property
     def height(self) -> int:
         return len(self.rows)
