@@ -131,6 +131,10 @@ class Monster:
     def patrol_route(self) -> tuple[Cell, ...]:
         return self._patrol_route
 
+    @property
+    def is_chasing(self) -> bool:
+        return isinstance(self._state, Chase)
+
     def perceives(self, situation: Situation) -> bool:
         sight = (
             self._sight_with_light if situation.flashlight_on else self._sight_in_dark
