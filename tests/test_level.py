@@ -1,6 +1,6 @@
 import pytest
 
-from core.level import LevelFormatError, parse_level, load_level
+from core.level import LevelFormatError, load_level, parse_level
 
 SMALL_LEVEL = """
 #######
@@ -99,3 +99,7 @@ def test_emergency_light_cells_are_found():
 def test_level_without_emergency_light_is_valid():
     level = parse_level("######\n#PFGE#\n#..NM#\n######")
     assert level.emergency_light_cells == ()
+
+def test_hiding_spot_cells_are_found():
+    level = parse_level("######\n#PFGE#\n#HHNM#\n######")
+    assert level.hiding_spot_cells == ((2, 1), (2, 2))

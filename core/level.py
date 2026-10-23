@@ -17,6 +17,7 @@ NOTE = "N"
 BATTERY = "B"
 DOCUMENT = "D"
 EMERGENCY_LIGHT = "L"
+HIDING_SPOT = "H"
 KNOWN_TILES = {
     WALL,
     FLOOR,
@@ -29,6 +30,7 @@ KNOWN_TILES = {
     BATTERY,
     DOCUMENT,
     EMERGENCY_LIGHT,
+    HIDING_SPOT,
 }
 
 
@@ -53,7 +55,7 @@ class FacilityMap:
     battery_cells: tuple[Cell, ...]
     document_cells: tuple[Cell, ...]
     emergency_light_cells: tuple[Cell, ...]
-
+    hiding_spot_cells: tuple[Cell, ...]
     @property
     def height(self) -> int:
         return len(self.rows)
@@ -97,6 +99,7 @@ def parse_level(text: str) -> FacilityMap:
         battery_cells=tuple(_cells_with(rows, BATTERY)),
         document_cells=tuple(_cells_with(rows, DOCUMENT)),
         emergency_light_cells=tuple(_cells_with(rows, EMERGENCY_LIGHT)),
+        hiding_spot_cells=tuple(_cells_with(rows, HIDING_SPOT)),
     )
 
 
