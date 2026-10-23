@@ -1,4 +1,5 @@
 """Conversion entre les cases de la grille (noyau) et les positions 3D (vue)."""
+
 from ursina import Vec3
 
 from core.level import Cell

@@ -2,6 +2,7 @@
 
 Utilise l'éclairage automatique de Panda3D, le moteur sur lequel Ursina est construit.
 """
+
 import random
 
 from panda3d.core import AmbientLight, Fog, PerspectiveLens, PointLight, Spotlight
@@ -21,8 +22,8 @@ EMERGENCY_ATTENUATION = (1.0, 0.5, 0.6)
 EXIT_COLOR = (0.1, 0.9, 0.3, 1)
 EXIT_ATTENUATION = (1.0, 0.3, 0.3)
 FIXTURE_SCALE = (0.4, 0.08, 0.4)
-FLICKER_CHANCE = 0.02      # probabilité de grésiller, à chaque image
-FLICKER_DIM = 0.15         # intensité pendant un grésillement
+FLICKER_CHANCE = 0.02  # probabilité de grésiller, à chaque image
+FLICKER_DIM = 0.15  # intensité pendant un grésillement
 
 
 def make_lit(entity: Entity) -> Entity:
@@ -54,6 +55,7 @@ class Lighting:
 
     def __init__(self) -> None:
         self._flashlight_node = None
+        self._flashlight_on = True
 
     def setup(self) -> None:
         window.color = color.black
@@ -63,13 +65,20 @@ class Lighting:
 
     def set_flashlight(self, on: bool) -> None:
         if self._flashlight_node is None:
-            raise RuntimeError("Lighting.setup() doit être appelé avant set_flashlight().")
+            raise RuntimeError(
+                "Lighting.setup() doit être appelé avant set_flashlight()."
+            )
+        if on == self._flashlight_on:
+            return
+        self._flashlight_on = on
         if on:
             scene.setLight(self._flashlight_node)
         else:
             scene.clearLight(self._flashlight_node)
 
-    def add_emergency_lights(self, cells: tuple[Cell, ...], ceiling_height: float) -> None:
+    def add_emergency_lights(
+        self, cells: tuple[Cell, ...], ceiling_height: float
+    ) -> None:
         """Lumières de secours rouges qui grésillent."""
         for cell in cells:
             light = self._add_ceiling_light(
@@ -79,11 +88,17 @@ class Lighting:
 
     def add_exit_light(self, cell: Cell, ceiling_height: float) -> None:
         """Lumière verte au-dessus de la sortie, repère visible de loin."""
-        self._add_ceiling_light(cell, ceiling_height, EXIT_COLOR, EXIT_ATTENUATION, color.lime)
+        self._add_ceiling_light(
+            cell, ceiling_height, EXIT_COLOR, EXIT_ATTENUATION, color.lime
+        )
 
     @staticmethod
     def _add_ceiling_light(
-        cell: Cell, ceiling_height: float, light_color: tuple, attenuation: tuple, fixture_color
+        cell: Cell,
+        ceiling_height: float,
+        light_color: tuple,
+        attenuation: tuple,
+        fixture_color,
     ) -> PointLight:
         """Une lumière ponctuelle sous le plafond, avec son boîtier lumineux."""
         light = PointLight("ceiling_light")

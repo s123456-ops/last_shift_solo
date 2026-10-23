@@ -9,6 +9,7 @@ pluggy==1.7.0
 Pygments==2.21.0
 pyperclip==1.11.0
 pytest==9.1.1
+ruff==0.17.2
 screeninfo==0.8.1
 sswg==4.3.0
 typing_extensions==4.16.0

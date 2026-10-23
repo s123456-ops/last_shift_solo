@@ -6,6 +6,7 @@ suivie de son texte. Les positions doivent correspondre aux cases 'D' de la cart
 
 Module indépendant du moteur de jeu.
 """
+
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -76,7 +77,9 @@ def _build_document(header, body: list[str]) -> Document:
     text = "\n".join(body).strip()
     if not text:
         raise DocumentFormatError(f"Ligne {number} : le document « {title} » est vide.")
-    return Document(cell=(int(match.group(1)), int(match.group(2))), title=title, text=text)
+    return Document(
+        cell=(int(match.group(1)), int(match.group(2))), title=title, text=text
+    )
 
 
 def _check_matches_level(documents: dict[Cell, Document], level: FacilityMap) -> None:

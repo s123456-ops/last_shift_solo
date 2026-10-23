@@ -2,6 +2,7 @@
 
 Ce module affiche ; il ne contient aucune règle du jeu.
 """
+
 from dataclasses import dataclass
 
 from ursina import Entity, color, destroy
@@ -52,33 +53,39 @@ class LevelRenderer:
     def _build_floor_and_ceiling(self) -> None:
         width, height = self._level.width, self._level.height
         center_cell = ((height - 1) / 2, (width - 1) / 2)
-        make_lit(Entity(
-            model="plane",
-            scale=(width, 1, height),
-            position=cell_to_world(center_cell),
-            texture="white_cube",
-            texture_scale=(width, height),
-            color=color.gray,
-            collider="box",
-        ))
-        make_lit(Entity(
-            model="plane",
-            scale=(width, 1, height),
-            position=cell_to_world(center_cell, self._wall_height),
-            rotation_x=180,
-            color=color.dark_gray,
-        ))
+        make_lit(
+            Entity(
+                model="plane",
+                scale=(width, 1, height),
+                position=cell_to_world(center_cell),
+                texture="white_cube",
+                texture_scale=(width, height),
+                color=color.gray,
+                collider="box",
+            )
+        )
+        make_lit(
+            Entity(
+                model="plane",
+                scale=(width, 1, height),
+                position=cell_to_world(center_cell, self._wall_height),
+                rotation_x=180,
+                color=color.dark_gray,
+            )
+        )
 
     def _build_walls(self) -> None:
         for cell in self._level.wall_cells():
-            make_lit(Entity(
-                model="cube",
-                position=cell_to_world(cell, self._wall_height / 2),
-                scale=(1, self._wall_height, 1),
-                texture="white_cube",
-                color=color.light_gray,
-                collider="box",
-            ))
+            make_lit(
+                Entity(
+                    model="cube",
+                    position=cell_to_world(cell, self._wall_height / 2),
+                    scale=(1, self._wall_height, 1),
+                    texture="white_cube",
+                    color=color.light_gray,
+                    collider="box",
+                )
+            )
 
     def _build_items(self) -> None:
         level = self._level
@@ -95,9 +102,11 @@ class LevelRenderer:
 
     @staticmethod
     def _spawn_item(cell: Cell, style: ItemStyle) -> Entity:
-        return make_lit(Entity(
-            model="cube",
-            position=cell_to_world(cell, style.height),
-            scale=style.scale,
-            color=style.color,
-        ))
+        return make_lit(
+            Entity(
+                model="cube",
+                position=cell_to_world(cell, style.height),
+                scale=style.scale,
+                color=style.color,
+            )
+        )
