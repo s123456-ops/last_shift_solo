@@ -9,7 +9,7 @@ from ursina import Entity, Text, Ursina, Vec2, application, color, held_keys, ti
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 from core.flashlight import Flashlight
-from core.interactables import BatteryPickup, Interactions
+from core.interactables import BatteryPickup, HidingSpot, Interactions
 from core.level import LevelFormatError, load_level
 from core.monster import Monster, Situation
 from core.player import Player
@@ -36,7 +36,7 @@ STAMINA_REGEN_PER_SECOND = 12  # environ 8 secondes pour se recharger
 MONSTER_PATROL_SPEED = 2  # il rôde, plus lent que votre marche
 MONSTER_CHASE_SPEED = 4  # il fonce : seule la course permet de le distancer
 MONSTER_GRACE_PERIOD = 20  # secondes avant qu'il ne commence à bouger
-PEACEFUL_MODE = False  # True pour tester sans le monstre                 # entre la marche (3) et la course (6)
+PEACEFUL_MODE = False  # True pour tester sans le monstre
 CATCH_DISTANCE = 0.9
 MONSTER_PATROL = [(14, 26), (7, 22), (11, 15), (12, 4), (7, 8), (2, 26)]
 
@@ -66,13 +66,14 @@ class GameController(Entity):
         self._hud = hud
         self._game_over = False
         self._elapsed = 0.0
+        self._position_before_hiding = first_person.position
 
     def input(self, key: str) -> None:
         if key == "escape":
             application.quit()
         if self._game_over:
             return
-        if key == "f":
+        if key == "f" and not self._player.is_hidden:
             self._player.flashlight.toggle()
         elif key == "e":
             self._interact()
@@ -96,7 +97,9 @@ class GameController(Entity):
 
     def _update_stamina(self) -> None:
         stamina = self._player.stamina
-        is_moving = self._first_person.direction.length() > 0
+        is_moving = (
+            self._first_person.enabled and self._first_person.direction.length() > 0
+        )
         stamina.update(time.dt, is_moving and held_keys["shift"])
         self._first_person.speed = RUN_SPEED if stamina.is_running else WALK_SPEED
         self._hud.show_stamina(stamina.charge_ratio, stamina.is_exhausted)
@@ -109,9 +112,23 @@ class GameController(Entity):
         item = self._interactions.near(self._player_cell())
         if item is None:
             return
+        was_hidden = self._player.is_hidden
         self._hud.show_message(item.interact(self._player))
         if item.is_consumed:
             self._renderer.remove_item(item.cell)
+        if self._player.is_hidden != was_hidden:
+            self._apply_hiding(item.cell)
+
+    def _apply_hiding(self, cell) -> None:
+        """Place la caméra dans le casier, ou la ressort là où le joueur est entré."""
+        hidden = self._player.is_hidden
+        if hidden:
+            self._position_before_hiding = self._first_person.position
+            self._first_person.position = cell_to_world(cell)
+        else:
+            self._first_person.position = self._position_before_hiding
+        self._first_person.enabled = not hidden
+        self._hud.show_hiding(hidden)
 
     def _update_monster(self) -> None:
         self._elapsed += time.dt
@@ -122,6 +139,7 @@ class GameController(Entity):
                 player_cell=self._player_cell(),
                 player_running=self._player.stamina.is_running,
                 flashlight_on=self._player.flashlight.is_on,
+                player_hidden=self._player.is_hidden,
             )
             self._monster_view.move_to(self._monster.step(situation))
             speed = (
@@ -132,7 +150,7 @@ class GameController(Entity):
             self._monster_view.set_speed(speed)
         self._monster_view.advance(time.dt)
         if self._monster_caught_player():
-            self._end_game("You have been caught by the monster.")
+            self._end_game("Le poste de gardien de nuit est à nouveau vacant.")
 
     def _monster_caught_player(self) -> bool:
         gap = self._monster_view.position - self._first_person.position
@@ -142,6 +160,7 @@ class GameController(Entity):
         self._game_over = True
         self._first_person.enabled = False
         self._hud.show_prompt(None)
+        self._hud.show_hiding(False)
         Text(message, origin=(0, 0), scale=2, color=color.red)
 
 
@@ -151,6 +170,7 @@ def main() -> None:
         monster = Monster(level, level.monster_start, MONSTER_PATROL)
         interactions = Interactions(
             [BatteryPickup(cell, BATTERY_CHARGE) for cell in level.battery_cells]
+            + [HidingSpot(cell) for cell in level.hiding_spot_cells]
         )
     except (FileNotFoundError, LevelFormatError, ValueError) as error:
         sys.exit(f"Impossible de préparer la partie : {error}")

@@ -1,4 +1,5 @@
 """Le joueur : ce qu'il possède et où il se trouve. Module indépendant du moteur de jeu."""
+
 from core.flashlight import Flashlight
 from core.level import Cell
 from core.stamina import Stamina

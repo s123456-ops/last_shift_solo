@@ -20,6 +20,7 @@ class Situation:
     player_cell: Cell
     player_running: bool
     flashlight_on: bool
+    player_hidden: bool = False
 
 
 class MonsterState(ABC):
@@ -136,6 +137,8 @@ class Monster:
         return isinstance(self._state, Chase)
 
     def perceives(self, situation: Situation) -> bool:
+        if situation.player_hidden:
+            return self.is_chasing  # il vous a vu entrer : il sait où vous êtes
         sight = (
             self._sight_with_light if situation.flashlight_on else self._sight_in_dark
         )

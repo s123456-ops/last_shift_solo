@@ -100,6 +100,7 @@ def test_level_without_emergency_light_is_valid():
     level = parse_level("######\n#PFGE#\n#..NM#\n######")
     assert level.emergency_light_cells == ()
 
+
 def test_hiding_spot_cells_are_found():
     level = parse_level("######\n#PFGE#\n#HHNM#\n######")
     assert level.hiding_spot_cells == ((2, 1), (2, 2))

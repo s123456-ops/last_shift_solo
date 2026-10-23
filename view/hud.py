@@ -57,6 +57,18 @@ class Hud:
         self._prompt = Text(
             "", parent=camera.ui, origin=(0, 0), position=PROMPT_POSITION
         )
+        self._hiding_bars = [
+            Entity(
+                parent=camera.ui,
+                model="quad",
+                color=color.black,
+                scale=(2, 0.36),
+                y=y,
+                z=0.5,
+                enabled=False,
+            )
+            for y in (0.32, -0.32)
+        ]
 
     def show_battery(self, ratio: float) -> None:
         self._battery.show(ratio, warning=ratio < LOW_BATTERY)
@@ -78,3 +90,7 @@ class Hud:
             color=color.light_gray,
         )
         destroy(message, delay=MESSAGE_DURATION)
+
+    def show_hiding(self, hidden: bool) -> None:
+        for bar in self._hiding_bars:
+            bar.enabled = hidden
