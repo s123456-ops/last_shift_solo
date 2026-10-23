@@ -2,6 +2,7 @@
 
 Ce module ne dépend d'aucun moteur de jeu : il peut être testé sans ouvrir de fenêtre.
 """
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,7 +18,17 @@ BATTERY = "B"
 DOCUMENT = "D"
 EMERGENCY_LIGHT = "L"
 KNOWN_TILES = {
-    WALL, FLOOR, PLAYER_START, MONSTER_START, EXIT, FUSE, POWER_PANEL, NOTE, BATTERY, DOCUMENT, EMERGENCY_LIGHT,
+    WALL,
+    FLOOR,
+    PLAYER_START,
+    MONSTER_START,
+    EXIT,
+    FUSE,
+    POWER_PANEL,
+    NOTE,
+    BATTERY,
+    DOCUMENT,
+    EMERGENCY_LIGHT,
 }
 
 
@@ -42,6 +53,7 @@ class FacilityMap:
     battery_cells: tuple[Cell, ...]
     document_cells: tuple[Cell, ...]
     emergency_light_cells: tuple[Cell, ...]
+
     @property
     def height(self) -> int:
         return len(self.rows)

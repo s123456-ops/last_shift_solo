@@ -10,6 +10,7 @@ SMALL_LEVEL = """
 #######
 """
 
+
 def test_parse_finds_special_cells():
     level = parse_level(SMALL_LEVEL)
     assert level.player_start == (1, 1)
@@ -27,7 +28,7 @@ def test_walls_and_outside_of_map_are_blocking():
     assert level.is_wall((0, 0))
     assert level.is_wall((2, 2))
     assert not level.is_wall((1, 2))
-    assert not level.is_wall((1, 3))   # un objet n'est pas un mur
+    assert not level.is_wall((1, 3))  # un objet n'est pas un mur
     assert level.is_wall((-1, 0))
     assert level.is_wall((10, 10))
 
@@ -61,7 +62,9 @@ def test_shipped_level_is_valid():
     level = load_level("levels/level1.txt")
     assert not level.is_wall(level.player_start)
 
+
 """dernier test vérifie que le vrai niveau du jeu est valide. Si un coéquipier casse la carte un jour, les tests le signaleront avant même de lancer le jeu."""
+
 
 def test_missing_fuse_raises():
     with pytest.raises(LevelFormatError, match="'F'"):
@@ -76,6 +79,7 @@ def test_level_without_battery_is_valid():
 def test_several_batteries_are_found():
     level = parse_level("######\n#PFGE#\n#BBNM#\n######")
     assert level.battery_cells == ((2, 1), (2, 2))
+
 
 def test_document_cells_are_found():
     level = parse_level("######\n#PFGE#\n#DDNM#\n######")

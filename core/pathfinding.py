@@ -2,6 +2,7 @@
 
 Module indépendant du moteur de jeu.
 """
+
 from collections import deque
 from collections.abc import Iterator
 

@@ -2,6 +2,7 @@
 
 Usage : python main.py
 """
+
 import sys
 
 from ursina import Entity, Ursina, Vec2, application, time
@@ -18,7 +19,7 @@ from view.model_loader import MONSTER, ModelLoadError, place_model
 LEVEL_PATH = "levels/level1.txt"
 MOUSE_SENSITIVITY = Vec2(25, 25)
 FLASHLIGHT_CAPACITY = 100
-FLASHLIGHT_DRAIN_PER_SECOND = 2   # batterie pleine = 50 secondes d'éclairage
+FLASHLIGHT_DRAIN_PER_SECOND = 2  # batterie pleine = 50 secondes d'éclairage
 
 
 class GameController(Entity):

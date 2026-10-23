@@ -1,10 +1,11 @@
 """Interface affichée par-dessus le jeu : jauge de batterie."""
+
 from ursina import Entity, Text, camera, color
 
 BAR_POSITION = (-0.82, -0.44)
 BAR_WIDTH = 0.3
 BAR_HEIGHT = 0.018
-LOW_BATTERY = 0.2   # en dessous de 20 %, la jauge passe au rouge
+LOW_BATTERY = 0.2  # en dessous de 20 %, la jauge passe au rouge
 
 
 class Hud:
@@ -12,7 +13,13 @@ class Hud:
 
     def __init__(self) -> None:
         x, y = BAR_POSITION
-        Text("BATTERIE", parent=camera.ui, position=(x, y + 0.04), scale=0.8, color=color.light_gray)
+        Text(
+            "BATTERIE",
+            parent=camera.ui,
+            position=(x, y + 0.04),
+            scale=0.8,
+            color=color.light_gray,
+        )
         Entity(
             parent=camera.ui,
             model="quad",

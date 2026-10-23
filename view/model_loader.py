@@ -1,4 +1,5 @@
 """Chargement des modèles 3D, mise à l'échelle et réglages des modèles du jeu."""
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,12 +18,14 @@ class ModelSpec:
     """Un modèle et ses réglages, trouvés avec tools/preview_model.py."""
 
     path: Path
-    height: float          # hauteur en mètres
-    pitch: float = 0.0     # rotation R de l'outil
-    heading: float = 0.0   # rotation T de l'outil
+    height: float  # hauteur en mètres
+    pitch: float = 0.0  # rotation R de l'outil
+    heading: float = 0.0  # rotation T de l'outil
 
 
-MONSTER = ModelSpec(Path("assets/monster/monster.bam"), height=2.6, pitch=90, heading=180)
+MONSTER = ModelSpec(
+    Path("assets/monster/monster.bam"), height=2.6, pitch=90, heading=180
+)
 
 
 def load_model(app, path: Path) -> NodePath:
@@ -32,7 +35,9 @@ def load_model(app, path: Path) -> NodePath:
     try:
         node = app.loader.loadModel(Filename.fromOsSpecific(str(path.resolve())))
     except OSError as error:
-        raise ModelLoadError(f"Impossible de charger le modèle {path} : {error}") from error
+        raise ModelLoadError(
+            f"Impossible de charger le modèle {path} : {error}"
+        ) from error
     if node is None:
         raise ModelLoadError(f"Impossible de charger le modèle {path}.")
     return node

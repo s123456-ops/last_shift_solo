@@ -10,6 +10,7 @@ Touches :
     F            lampe torche     Échap  quitter
     Clic droit maintenu : tourner autour du modèle.   Molette : zoomer.
 """
+
 import sys
 from pathlib import Path
 
@@ -75,13 +76,15 @@ def main() -> None:
     except ModelLoadError as error:
         sys.exit(str(error))
 
-    make_lit(Entity(
-        model="plane",
-        scale=FLOOR_SIZE,
-        texture="white_cube",
-        texture_scale=(FLOOR_SIZE, FLOOR_SIZE),
-        color=color.gray,
-    ))
+    make_lit(
+        Entity(
+            model="plane",
+            scale=FLOOR_SIZE,
+            texture="white_cube",
+            texture_scale=(FLOOR_SIZE, FLOOR_SIZE),
+            color=color.gray,
+        )
+    )
     EditorCamera(rotation_x=10)
     lighting = Lighting()
     lighting.setup()
