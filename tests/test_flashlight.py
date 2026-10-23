@@ -59,3 +59,10 @@ def test_recharge_adds_battery():
     light.update(dt=5)  # batterie à 50
     light.recharge(30)
     assert light.battery == 80
+
+def test_charge_ratio_reflects_remaining_battery():
+    light = Flashlight(capacity=100, drain_per_second=10)
+    light.toggle()
+    light.update(dt=2.5)  # consomme 25
+    assert light.charge_ratio == 0.75
+ 

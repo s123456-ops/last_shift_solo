@@ -54,6 +54,7 @@ class Lighting:
 
     def __init__(self) -> None:
         self._flashlight_node = None
+        self._flashlight_on = True
 
     def setup(self) -> None:
         window.color = color.black
@@ -64,6 +65,9 @@ class Lighting:
     def set_flashlight(self, on: bool) -> None:
         if self._flashlight_node is None:
             raise RuntimeError("Lighting.setup() doit être appelé avant set_flashlight().")
+        if on == self._flashlight_on:
+            return
+        self._flashlight_on = on
         if on:
             scene.setLight(self._flashlight_node)
         else:

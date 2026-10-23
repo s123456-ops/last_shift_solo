@@ -21,6 +21,11 @@ class Flashlight:
     def is_on(self) -> bool:
         return self._is_on
 
+    @property
+    def charge_ratio(self) -> float:
+        return self._battery / self._capacity  # Proportion de batterie restante, entre 0 et 1.
+
+
     def toggle(self) -> None:
         if self._is_on:
             self._is_on = False
