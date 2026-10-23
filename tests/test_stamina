@@ -1,0 +1,48 @@
+from core.stamina import Stamina
+
+
+def make_stamina():
+    return Stamina(capacity=100, drain_per_second=10, regen_per_second=5)
+
+
+def test_new_stamina_is_full_and_walking():
+    stamina = make_stamina()
+    assert stamina.value == 100
+    assert not stamina.is_running
+
+
+def test_running_drains_stamina():
+    stamina = make_stamina()
+    stamina.update(dt=2, wants_to_run=True)
+    assert stamina.is_running
+    assert stamina.value == 80
+
+
+def test_walking_regenerates_stamina():
+    stamina = make_stamina()
+    stamina.update(dt=5, wants_to_run=True)   # 50
+    stamina.update(dt=2, wants_to_run=False)  # +10
+    assert stamina.value == 60
+
+
+def test_empty_stamina_exhausts_the_player():
+    stamina = make_stamina()
+    stamina.update(dt=10, wants_to_run=True)
+    assert stamina.value == 0
+    assert stamina.is_exhausted
+    assert not stamina.is_running
+
+
+def test_cannot_run_while_exhausted():
+    stamina = make_stamina()
+    stamina.update(dt=10, wants_to_run=True)  # épuisé
+    stamina.update(dt=1, wants_to_run=True)
+    assert not stamina.is_running
+
+
+def test_can_run_again_after_recovering_30_percent():
+    stamina = make_stamina()
+    stamina.update(dt=10, wants_to_run=True)   # épuisé, à 0
+    stamina.update(dt=6, wants_to_run=False)   # remonte à 30
+    stamina.update(dt=0.1, wants_to_run=True)
+    assert stamina.is_running
