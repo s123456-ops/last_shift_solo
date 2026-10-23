@@ -4,6 +4,7 @@ Usage, depuis la racine du projet :
     python -m tools.preview_level                    (niveau par défaut)
     python -m tools.preview_level levels/autre.txt   (un autre niveau)
 """
+
 import sys
 
 from ursina import Entity, Ursina, Vec2, application
