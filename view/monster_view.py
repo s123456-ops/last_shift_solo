@@ -55,6 +55,9 @@ class MonsterView:
                 math.degrees(math.atan2(direction.x, direction.z)) + 180
             )
 
+    def set_speed(self, speed: float) -> None:
+        self._speed = speed
+
     def advance(self, dt: float) -> None:
         to_target = self._target - self._entity.position
         step = self._speed * dt

@@ -74,3 +74,9 @@ def test_patrol_route_through_a_wall_raises():
 def test_empty_patrol_route_raises():
     with pytest.raises(ValueError):
         Monster(LEVEL, start=(2, 7), patrol_route=[])
+
+def test_is_chasing_reflects_the_current_state():
+    monster = make_monster()
+    assert not monster.is_chasing
+    monster.step(SEEN_WITH_LIGHT)
+    assert monster.is_chasing
