@@ -1,6 +1,7 @@
 """Le joueur : ce qu'il possède et où il se trouve. Module indépendant du moteur de jeu."""
 
 from core.flashlight import Flashlight
+from core.inventory import Inventory
 from core.level import Cell
 from core.stamina import Stamina
 
@@ -8,10 +9,20 @@ from core.stamina import Stamina
 class Player:
     """Regroupe la lampe et l'endurance du joueur, et sait s'il est caché."""
 
-    def __init__(self, flashlight: Flashlight, stamina: Stamina) -> None:
+    def __init__(
+        self,
+        flashlight: Flashlight,
+        stamina: Stamina,
+        inventory: Inventory | None = None,
+    ) -> None:
         self._flashlight = flashlight
         self._stamina = stamina
+        self._inventory = inventory if inventory is not None else Inventory()
         self._hiding_spot: Cell | None = None
+
+    @property
+    def inventory(self) -> Inventory:
+        return self._inventory
 
     @property
     def flashlight(self) -> Flashlight:

@@ -5,6 +5,8 @@ Module indépendant du moteur de jeu.
 
 from abc import ABC, abstractmethod
 
+from core.facility import Facility
+from core.inventory import FUSE_ITEM, PANEL_CODE
 from core.level import Cell
 from core.player import Player
 
@@ -79,6 +81,87 @@ class HidingSpot(Interactable):
         self._occupied = True
         player.hide(self.cell)
         return "Vous retenez votre souffle..."
+
+
+class Pickup(Interactable):
+    """Un objet à ramasser, qui rejoint l'inventaire (le fusible)."""
+
+    def __init__(self, cell: Cell, item: str, prompt: str, message: str) -> None:
+        super().__init__(cell)
+        self._item = item
+        self._prompt = prompt
+        self._message = message
+
+    @property
+    def prompt(self) -> str:
+        return self._prompt
+
+    def interact(self, player: Player) -> str:
+        player.inventory.add(self._item)
+        self._consumed = True
+        return self._message
+
+
+class Note(Interactable):
+    """Un texte à lire, qui peut apprendre quelque chose au joueur (le code)."""
+
+    def __init__(
+        self, cell: Cell, title: str, text: str, grants: str | None = None
+    ) -> None:
+        super().__init__(cell)
+        self._title = title
+        self._text = text
+        self._grants = grants
+
+    @property
+    def prompt(self) -> str:
+        return f"Lire : {self._title}"
+
+    def interact(self, player: Player) -> str:
+        if self._grants is not None:
+            player.inventory.add(self._grants)
+        return f"{self._title}\n\n{self._text}"
+
+
+class PowerPanel(Interactable):
+    """Le tableau électrique : fusible + code = courant rétabli."""
+
+    def __init__(self, cell: Cell, facility: Facility) -> None:
+        super().__init__(cell)
+        self._facility = facility
+
+    @property
+    def prompt(self) -> str:
+        return "Examiner le tableau électrique"
+
+    def interact(self, player: Player) -> str:
+        if self._facility.power_on:
+            return "Le courant est rétabli."
+        if not player.inventory.has(FUSE_ITEM):
+            return "Un fusible a grillé. Il en faut un de rechange."
+        if not player.inventory.has(PANEL_CODE):
+            return "Le tableau demande un code à trois chiffres."
+        player.inventory.remove(FUSE_ITEM)
+        self._facility.restore_power()
+        return "Le courant revient. La sortie est déverrouillée !"
+
+
+class ExitDoor(Interactable):
+    """La porte de sortie, verrouillée tant que le courant n'est pas rétabli."""
+
+    def __init__(self, cell: Cell, facility: Facility) -> None:
+        super().__init__(cell)
+        self._facility = facility
+
+    @property
+    def prompt(self) -> str:
+        return "Ouvrir la porte de sortie"
+
+    def interact(self, player: Player) -> str:
+        if not self._facility.power_on:
+            return "Verrouillée. Sans courant, la porte ne s'ouvrira pas."
+        self._facility.reach_exit()
+        return "05 h 58. Vous rendez votre badge."
 
 
 class Interactions:

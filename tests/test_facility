@@ -1,0 +1,19 @@
+import pytest
+
+from core.facility import Facility
+
+
+def test_power_is_off_at_start():
+    assert not Facility().power_on
+
+
+def test_exit_cannot_be_reached_without_power():
+    with pytest.raises(RuntimeError):
+        Facility().reach_exit()
+
+
+def test_exit_can_be_reached_once_power_is_restored():
+    facility = Facility()
+    facility.restore_power()
+    facility.reach_exit()
+    assert facility.exit_reached
