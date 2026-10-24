@@ -1,11 +1,12 @@
 """Boîte à outils audio partagée : chargement, lecture, boucles et proximité."""
+
 import random
 from pathlib import Path
 
 from panda3d.core import AudioSound, Filename
 
 SOUNDS_ROOT = Path("assets/sounds")
-HEARING_DISTANCE = 18.0   # au-delà, le monstre est considéré comme loin (en mètres)
+HEARING_DISTANCE = 18.0  # au-delà, le monstre est considéré comme loin (en mètres)
 
 
 def closeness(distance: float) -> float:
@@ -30,7 +31,9 @@ class SoundBank:
         directory = SOUNDS_ROOT / folder
         paths = sorted(directory.glob(pattern))
         if not paths:
-            print(f"Avertissement : aucun son « {pattern} » dans {directory}. Le jeu continue sans.")
+            print(
+                f"Avertissement : aucun son « {pattern} » dans {directory}. Le jeu continue sans."
+            )
         return [
             self._app.loader.loadSfx(Filename.fromOsSpecific(str(path.resolve())))
             for path in paths

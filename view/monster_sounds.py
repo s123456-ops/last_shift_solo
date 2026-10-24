@@ -1,13 +1,14 @@
 """Sons du monstre : grognements, cri, pas, respirations."""
+
 from panda3d.core import AudioSound
 
 from view.sound_bank import SoundBank
 
-GROWL_MIN_VOLUME = 0.08          # les grognements restent toujours audibles, faiblement
-GROWL_INTERVAL = (4.0, 10.0)     # secondes entre deux grognements
-BREATH_INTERVAL = (1.5, 3.5)     # secondes entre deux respirations
-PATROL_STEP_INTERVAL = 0.9       # secondes entre deux pas lourds
-CHASE_STEP_INTERVAL = 0.45       # secondes entre deux pas rapides
+GROWL_MIN_VOLUME = 0.08  # les grognements restent toujours audibles, faiblement
+GROWL_INTERVAL = (4.0, 10.0)  # secondes entre deux grognements
+BREATH_INTERVAL = (1.5, 3.5)  # secondes entre deux respirations
+PATROL_STEP_INTERVAL = 0.9  # secondes entre deux pas lourds
+CHASE_STEP_INTERVAL = 0.45  # secondes entre deux pas rapides
 
 
 class MonsterSounds:
@@ -27,7 +28,9 @@ class MonsterSounds:
         self._step_timer = 0.0
         self._was_chasing = False
 
-    def update(self, dt: float, closeness: float, chasing: bool, searching: bool) -> None:
+    def update(
+        self, dt: float, closeness: float, chasing: bool, searching: bool
+    ) -> None:
         if chasing and not self._was_chasing:
             self._bank.play(self._spotted, max(0.6, closeness))
         self._was_chasing = chasing
@@ -41,8 +44,13 @@ class MonsterSounds:
         self._bank.play(self._caught, 1.0)
 
     def stop_all(self) -> None:
-        for group in (self._growls, self._short_steps, self._heavy_steps, self._breaths,
-                      self._spotted):
+        for group in (
+            self._growls,
+            self._short_steps,
+            self._heavy_steps,
+            self._breaths,
+            self._spotted,
+        ):
             for sound in group:
                 sound.stop()
 
@@ -51,13 +59,15 @@ class MonsterSounds:
         if self._step_timer > 0:
             return
         if closeness > 0:
-            self._bank.play(self._short_steps if chasing else self._heavy_steps, closeness)
+            self._bank.play(
+                self._short_steps if chasing else self._heavy_steps, closeness
+            )
         self._step_timer = CHASE_STEP_INTERVAL if chasing else PATROL_STEP_INTERVAL
 
     def _update_growls(self, dt: float, closeness: float, patrolling: bool) -> None:
         volume = GROWL_MIN_VOLUME + (1 - GROWL_MIN_VOLUME) * closeness
         if self._bank.is_playing(self._current_growl):
-            self._current_growl.setVolume(volume)   # le grognement grossit s'il approche
+            self._current_growl.setVolume(volume)  # le grognement grossit s'il approche
             return
         if not patrolling:
             return

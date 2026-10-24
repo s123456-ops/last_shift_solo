@@ -80,7 +80,6 @@ class GameSession:
     @property
     def power_on(self) -> bool:
         return self._facility.power_on
-    
 
     def update(self, dt: float, wants_to_run: bool) -> None:
         if self.is_over:
