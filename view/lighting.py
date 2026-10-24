@@ -11,13 +11,13 @@ from ursina import Entity, camera, color, scene, window
 from core.level import Cell
 from view.coords import cell_to_world
 
-AMBIENT_COLOR = (0.09, 0.09, 0.11, 1)
-FOG_DENSITY = 0.06
+AMBIENT_COLOR = (0.025, 0.025, 0.03, 1)   # avant : 0.09
+FOG_DENSITY = 0.09                         # avant : 0.06
 FLASHLIGHT_COLOR = (1.0, 0.92, 0.75, 1)
 FLASHLIGHT_ANGLE = 65
 FLASHLIGHT_ATTENUATION = (1.0, 0.02, 0.008)
 
-EMERGENCY_COLOR = (0.35, 0.03, 0.02, 1)
+EMERGENCY_COLOR = (0.25, 0.02, 0.01, 1)   # avant : 0.35
 EMERGENCY_ATTENUATION = (1.0, 0.5, 0.6)
 EXIT_COLOR = (0.1, 0.9, 0.3, 1)
 EXIT_ATTENUATION = (1.0, 0.3, 0.3)
