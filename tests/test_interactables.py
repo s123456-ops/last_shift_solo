@@ -1,7 +1,18 @@
 import pytest
 
+from core.facility import Facility
 from core.flashlight import Flashlight
-from core.interactables import BatteryPickup, HidingSpot, Interactable, Interactions
+from core.interactables import (
+    BatteryPickup,
+    ExitDoor,
+    HidingSpot,
+    Interactable,
+    Interactions,
+    Note,
+    Pickup,
+    PowerPanel,
+)
+from core.inventory import FUSE_ITEM, PANEL_CODE
 from core.player import Player
 from core.stamina import Stamina
 
@@ -79,3 +90,67 @@ def test_hiding_spot_is_never_consumed():
     locker = HidingSpot((3, 3))
     locker.interact(make_player_with_low_battery())
     assert not locker.is_consumed
+
+
+def make_fuse():
+    return Pickup((1, 1), FUSE_ITEM, "Ramasser le fusible", "Fusible récupéré.")
+
+
+def test_pickup_adds_the_item_to_the_inventory():
+    player = make_player_with_low_battery()
+    fuse = make_fuse()
+    fuse.interact(player)
+    assert player.inventory.has(FUSE_ITEM)
+    assert fuse.is_consumed
+
+
+def test_reading_the_code_note_teaches_the_code():
+    player = make_player_with_low_battery()
+    Note((1, 1), "Note de Morel", "Code : 4 7 1", grants=PANEL_CODE).interact(player)
+    assert player.inventory.has(PANEL_CODE)
+
+
+def test_panel_refuses_without_a_fuse():
+    player = make_player_with_low_battery()
+    facility = Facility()
+    PowerPanel((1, 1), facility).interact(player)
+    assert not facility.power_on
+
+
+def test_panel_refuses_without_the_code():
+    player = make_player_with_low_battery()
+    player.inventory.add(FUSE_ITEM)
+    facility = Facility()
+    PowerPanel((1, 1), facility).interact(player)
+    assert not facility.power_on
+
+
+def test_panel_restores_power_with_fuse_and_code():
+    player = make_player_with_low_battery()
+    player.inventory.add(FUSE_ITEM)
+    player.inventory.add(PANEL_CODE)
+    facility = Facility()
+    PowerPanel((1, 1), facility).interact(player)
+    assert facility.power_on
+    assert not player.inventory.has(FUSE_ITEM)  # le fusible a été utilisé
+
+
+def test_exit_door_stays_locked_without_power():
+    facility = Facility()
+    ExitDoor((1, 1), facility).interact(make_player_with_low_battery())
+    assert not facility.exit_reached
+
+
+def test_exit_door_opens_once_power_is_restored():
+    facility = Facility()
+    facility.restore_power()
+    ExitDoor((1, 1), facility).interact(make_player_with_low_battery())
+    assert facility.exit_reached
+
+
+def test_notes_are_readable():
+    assert Note((1, 1), "Titre", "Texte").is_readable
+
+
+def test_batteries_are_not_readable():
+    assert not BatteryPickup((1, 1)).is_readable
