@@ -136,6 +136,10 @@ class Monster:
     def is_chasing(self) -> bool:
         return isinstance(self._state, Chase)
 
+    @property
+    def is_searching(self) -> bool:
+        return isinstance(self._state, Search)
+
     def perceives(self, situation: Situation) -> bool:
         if situation.player_hidden:
             return self.is_chasing  # il vous a vu entrer : il sait où vous êtes

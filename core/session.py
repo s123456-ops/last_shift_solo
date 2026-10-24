@@ -73,6 +73,10 @@ class GameSession:
     def monster_is_chasing(self) -> bool:
         return self._monster.is_chasing
 
+    @property
+    def monster_is_searching(self) -> bool:
+        return self._monster.is_searching
+
     def update(self, dt: float, wants_to_run: bool) -> None:
         if self.is_over:
             return
