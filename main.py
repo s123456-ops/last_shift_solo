@@ -1,8 +1,11 @@
 """THE LAST SHIFT, version solo : point d'entrée du jeu.
 
-Usage : python main.py
+Usage :
+    python main.py              (anglais, par défaut)
+    python main.py --lang fr    (français)
 """
 
+import argparse
 import sys
 
 from ursina import Entity, Ursina, Vec2, application, color, held_keys, time, window
@@ -26,6 +29,7 @@ from core.monster import Monster
 from core.player import Player
 from core.session import GameSession, GameStatus
 from core.stamina import Stamina
+from core.texts import SUPPORTED_LANGUAGES, set_language, tr
 from view.coords import cell_to_world, world_to_cell
 from view.game_audio import AudioState, GameAudio
 from view.hud import Hud
@@ -35,8 +39,9 @@ from view.monster_view import MonsterView
 from view.screens import IntroSequence, TitleScreen
 from view.title_backdrop import TitleBackdrop
 
+GAME_LANGUAGE = "en"
 LEVEL_PATH = "levels/level1.txt"
-DOCUMENTS_PATH = "levels/level1_documents.txt"
+DOCUMENTS_PATH = "levels/level1_documents.{language}.txt"
 MOUSE_SENSITIVITY = Vec2(25, 25)
 
 FLASHLIGHT_CAPACITY = 100
@@ -55,19 +60,10 @@ MONSTER_GRACE_PERIOD = 20  # secondes avant qu'il ne commence à bouger
 PEACEFUL_MODE = False  # True pour tester sans le monstre
 CATCH_DISTANCE = 0.9
 MONSTER_PATROL = [(14, 26), (7, 22), (11, 15), (12, 4), (7, 8), (2, 26)]
+
 TITLE_CAMERA_START = (7, 2)  # début du couloir principal, à l'ouest
 TITLE_CAMERA_END = (7, 18)  # la caméra s'arrête avant d'atteindre la silhouette
 TITLE_SILHOUETTE = (7, 27)  # le monstre, au fond, près d'une lumière de secours
-
-CODE_NOTE_TITLE = "Note de Daniel Morel"
-CODE_NOTE_TEXT = (
-    "Si tu lis ça, le courant a sauté et les portes du B sont ouvertes.\n"
-    "Il y a un fusible de rechange dans la réserve. Code du tableau : 4 7 1.\n"
-    "Ne cours pas sauf si tu y es obligé. Il entend.\n"
-    "Rends ton badge à l'heure.\n"
-    "— D. M."
-)
-DEFEAT_TEXT = "Le poste de gardien de nuit est à nouveau vacant."
 
 
 class GameController(Entity):
@@ -222,21 +218,21 @@ class GameController(Entity):
             self._audio.on_won()
         else:
             self._audio.on_caught()
-        self._hud.show_end("Vous êtes sorti." if won else DEFEAT_TEXT, won)
+        self._hud.show_end(tr("end.won") if won else tr("end.lost"), won)
 
 
-def build_session(level) -> GameSession:
+def build_session(level, language: str) -> GameSession:
     """Assemble le noyau : joueur, monstre, bâtiment et objets du niveau."""
     facility = Facility()
-    documents = load_documents(DOCUMENTS_PATH, level)
+    documents = load_documents(DOCUMENTS_PATH.format(language=language), level)
     items = [
-        Pickup(
-            level.fuse_cell,
-            FUSE_ITEM,
-            "Ramasser le fusible",
-            "Fusible de rechange récupéré.",
+        Pickup(level.fuse_cell, FUSE_ITEM, tr("fuse.prompt"), tr("fuse.message")),
+        Note(
+            level.note_cell,
+            tr("code_note.title"),
+            tr("code_note.text"),
+            grants=PANEL_CODE,
         ),
-        Note(level.note_cell, CODE_NOTE_TITLE, CODE_NOTE_TEXT, grants=PANEL_CODE),
         PowerPanel(level.power_panel_cell, facility),
         ExitDoor(level.exit_cell, facility),
     ]
@@ -287,10 +283,37 @@ def start_game(
     )
 
 
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="THE LAST SHIFT")
+    parser.add_argument(
+        "--lang",
+        choices=SUPPORTED_LANGUAGES,
+        default=GAME_LANGUAGE,
+        help=f"langue du jeu (par défaut : {GAME_LANGUAGE})",
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
+    import traceback  # --- diagnostic temporaire, à retirer ensuite ---
+
+    real_exit = sys.exit
+
+    def traced_exit(*args):
+        print("\n=== QUELQU'UN QUITTE LE JEU, DEPUIS : ===")
+        traceback.print_stack()
+        real_exit(*args)
+
+    sys.exit = traced_exit
+    # --- fin du diagnostic ---
+
+    language = parse_arguments().lang
+
+    language = parse_arguments().lang
     try:
+        set_language(language)
         level = load_level(LEVEL_PATH)
-        session = build_session(level)
+        session = build_session(level, language)
     except (
         FileNotFoundError,
         LevelFormatError,

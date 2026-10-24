@@ -2,19 +2,20 @@
 
 from core.facility import Facility
 from core.inventory import FUSE_ITEM, PANEL_CODE, Inventory
+from core.texts import tr
 
 
 def current_objective(inventory: Inventory, facility: Facility) -> str:
     if facility.exit_reached:
-        return "Vous êtes sorti."
+        return tr("objective.escaped")
     if facility.power_on:
-        return "Rejoindre la sortie."
+        return tr("objective.reach_exit")
     has_fuse = inventory.has(FUSE_ITEM)
     knows_code = inventory.has(PANEL_CODE)
     if not has_fuse and not knows_code:
-        return "Rétablir le courant : trouver un fusible et le code du tableau."
+        return tr("objective.start")
     if not has_fuse:
-        return "Trouver un fusible de rechange."
+        return tr("objective.find_fuse")
     if not knows_code:
-        return "Trouver le code du tableau électrique."
-    return "Réparer le tableau électrique, en salle de maintenance."
+        return tr("objective.find_code")
+    return tr("objective.repair")

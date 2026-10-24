@@ -9,6 +9,7 @@ from core.facility import Facility
 from core.inventory import FUSE_ITEM, PANEL_CODE
 from core.level import Cell
 from core.player import Player
+from core.texts import tr
 
 REACH = (
     (0, 0),
@@ -59,12 +60,12 @@ class BatteryPickup(Interactable):
 
     @property
     def prompt(self) -> str:
-        return "Ramasser la pile"
+        return tr("battery.prompt")
 
     def interact(self, player: Player) -> str:
         player.flashlight.recharge(self._charge)
         self._consumed = True
-        return "Pile insérée dans la lampe."
+        return tr("battery.message")
 
 
 class HidingSpot(Interactable):
@@ -76,16 +77,18 @@ class HidingSpot(Interactable):
 
     @property
     def prompt(self) -> str:
-        return "Sortir du casier" if self._occupied else "Se cacher dans le casier"
+        return (
+            tr("locker.prompt_leave") if self._occupied else tr("locker.prompt_enter")
+        )
 
     def interact(self, player: Player) -> str:
         if self._occupied:
             self._occupied = False
             player.leave_hiding()
-            return "Vous sortez du casier."
+            return tr("locker.leave")
         self._occupied = True
         player.hide(self.cell)
-        return "Vous retenez votre souffle..."
+        return tr("locker.enter")
 
 
 class Pickup(Interactable):
@@ -120,7 +123,7 @@ class Note(Interactable):
 
     @property
     def prompt(self) -> str:
-        return f"Lire : {self._title}"
+        return tr("note.prompt", title=self._title)
 
     @property
     def is_readable(self) -> bool:
@@ -141,18 +144,18 @@ class PowerPanel(Interactable):
 
     @property
     def prompt(self) -> str:
-        return "Examiner le tableau électrique"
+        return tr("panel.prompt")
 
     def interact(self, player: Player) -> str:
         if self._facility.power_on:
-            return "Le courant est rétabli."
+            return tr("panel.powered")
         if not player.inventory.has(FUSE_ITEM):
-            return "Un fusible a grillé. Il en faut un de rechange."
+            return tr("panel.no_fuse")
         if not player.inventory.has(PANEL_CODE):
-            return "Le tableau demande un code à trois chiffres."
+            return tr("panel.no_code")
         player.inventory.remove(FUSE_ITEM)
         self._facility.restore_power()
-        return "Le courant revient. La sortie est déverrouillée !"
+        return tr("panel.restored")
 
 
 class ExitDoor(Interactable):
@@ -164,13 +167,13 @@ class ExitDoor(Interactable):
 
     @property
     def prompt(self) -> str:
-        return "Ouvrir la porte de sortie"
+        return tr("exit.prompt")
 
     def interact(self, player: Player) -> str:
         if not self._facility.power_on:
-            return "Verrouillée. Sans courant, la porte ne s'ouvrira pas."
+            return tr("exit.locked")
         self._facility.reach_exit()
-        return "05 h 58. Vous rendez votre badge."
+        return tr("exit.open")
 
 
 class Interactions:
