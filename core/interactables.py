@@ -36,6 +36,11 @@ class Interactable(ABC):
         return self._consumed
 
     @property
+    def is_readable(self) -> bool:
+        """Vrai si l'interaction ouvre un texte à lire, affiché en grand."""
+        return False
+
+    @property
     @abstractmethod
     def prompt(self) -> str:
         """Texte affiché quand le joueur est à portée."""
@@ -116,6 +121,10 @@ class Note(Interactable):
     @property
     def prompt(self) -> str:
         return f"Lire : {self._title}"
+
+    @property
+    def is_readable(self) -> bool:
+        return True
 
     def interact(self, player: Player) -> str:
         if self._grants is not None:

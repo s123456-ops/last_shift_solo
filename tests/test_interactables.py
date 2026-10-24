@@ -146,3 +146,11 @@ def test_exit_door_opens_once_power_is_restored():
     facility.restore_power()
     ExitDoor((1, 1), facility).interact(make_player_with_low_battery())
     assert facility.exit_reached
+
+
+def test_notes_are_readable():
+    assert Note((1, 1), "Titre", "Texte").is_readable
+
+
+def test_batteries_are_not_readable():
+    assert not BatteryPickup((1, 1)).is_readable
