@@ -2,6 +2,8 @@
 
 from ursina import Entity, Text, camera, color, destroy
 
+from core.texts import tr
+
 BAR_WIDTH = 0.3
 BAR_HEIGHT = 0.018
 BATTERY_POSITION = (-0.82, -0.44)
@@ -56,8 +58,12 @@ class Hud:
     """Affiche ce que le joueur doit savoir."""
 
     def __init__(self) -> None:
-        self._battery = GaugeBar("BATTERIE", BATTERY_POSITION, color.yellow, color.red)
-        self._stamina = GaugeBar("ENDURANCE", STAMINA_POSITION, color.azure, color.gray)
+        self._battery = GaugeBar(
+            tr("hud.battery"), BATTERY_POSITION, color.yellow, color.red
+        )
+        self._stamina = GaugeBar(
+            tr("hud.stamina"), STAMINA_POSITION, color.azure, color.gray
+        )
         self._prompt = Text(
             "", parent=camera.ui, origin=(0, 0), position=PROMPT_POSITION
         )
@@ -81,7 +87,6 @@ class Hud:
             )
             for y in (0.32, -0.32)
         ]
-
         self._reading_panel = Entity(
             parent=camera.ui,
             model="quad",
@@ -92,20 +97,20 @@ class Hud:
         )
         self._reading_panel.alpha = 0.9
         self._reading_text = Text(
-            "",
-            parent=camera.ui,
-            origin=(0, 0),
-            y=0.03,
-            enabled=False,
+            "", parent=camera.ui, origin=(0, 0), y=0.03, enabled=False
         )
         self._reading_hint = Text(
-            "[E] Fermer",
+            tr("hud.close"),
             parent=camera.ui,
             origin=(0, 0),
             y=-0.33,
             color=color.light_gray,
             enabled=False,
         )
+
+    @property
+    def is_reading(self) -> bool:
+        return self._reading_panel.enabled
 
     def show_battery(self, ratio: float) -> None:
         self._battery.show(ratio, warning=ratio < LOW_BATTERY)
@@ -117,7 +122,7 @@ class Hud:
         self._prompt.text = f"[E] {text}" if text else ""
 
     def show_objective(self, text: str) -> None:
-        label = f"OBJECTIF : {text}"
+        label = tr("hud.objective", text=text)
         if self._objective.text != label:
             self._objective.text = label
 
@@ -137,6 +142,17 @@ class Hud:
         for bar in self._hiding_bars:
             bar.enabled = hidden
 
+    def show_document(self, text: str) -> None:
+        self.show_prompt(None)
+        self._reading_text.text = text
+        self._reading_text.wordwrap = READING_WRAP
+        for element in (self._reading_panel, self._reading_text, self._reading_hint):
+            element.enabled = True
+
+    def close_document(self) -> None:
+        for element in (self._reading_panel, self._reading_text, self._reading_hint):
+            element.enabled = False
+
     def show_end(self, text: str, won: bool) -> None:
         self.show_prompt(None)
         self.show_hiding(False)
@@ -148,26 +164,9 @@ class Hud:
             color=color.lime if won else color.red,
         )
         Text(
-            "Échap pour quitter",
+            tr("hud.quit_hint"),
             parent=camera.ui,
             origin=(0, 0),
             y=-0.1,
             color=color.light_gray,
         )
-
-    @property
-    def is_reading(self) -> bool:
-        return self._reading_panel.enabled
-
-    def show_document(self, text: str) -> None:
-        self.show_prompt(None)
-        self._reading_text.text = text
-        self._reading_text.wordwrap = (
-            READING_WRAP  # appliqué une fois le texte en place
-        )
-        for element in (self._reading_panel, self._reading_text, self._reading_hint):
-            element.enabled = True
-
-    def close_document(self) -> None:
-        for element in (self._reading_panel, self._reading_text, self._reading_hint):
-            element.enabled = False

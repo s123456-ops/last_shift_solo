@@ -14,15 +14,12 @@ from ursina import (
     time,
 )
 
-INTRO_CARDS = (
-    "Institut Helix — Secteur B\n\nFermé depuis six ans.\nOfficiellement, pour raisons budgétaires.",
-    "Le site est sous scellés.\nIl reste un seul poste : gardien de nuit.\n\nVous commencez ce soir.",
-    "Votre prédécesseur n'a jamais rendu son badge.",
-    "00 h 13.\n\nLe courant vient de sauter.",
-)
+from core.texts import tr
+
+INTRO_CARD_KEYS = ("intro.1", "intro.2", "intro.3", "intro.4")
 FADE_DURATION = 1.0  # secondes d'apparition et de disparition de chaque carton
 HOLD_DURATION = 3.0  # secondes où le carton reste pleinement affiché
-SKIP_KEYS = ("space", "enter", "escape")
+SKIP_KEYS = ("space", "enter")
 TITLE_BAND_OPACITY = 0.55
 
 
@@ -46,17 +43,12 @@ class TitleScreen(Entity):
             scale=4,
             color=color.light_gray,
         )
-        Text(
-            "Institut Helix — Secteur B",
-            parent=self,
-            origin=(0, 0),
-            y=0.06,
-            color=color.gray,
+        Text(tr("title.subtitle"), parent=self, origin=(0, 0), y=0.06, color=color.gray)
+        buttons = (
+            (tr("title.start"), -0.08, self._start),
+            (tr("title.quit"), -0.18, application.quit),
         )
-        for label, y, action in (
-            ("Commencer", -0.08, self._start),
-            ("Quitter", -0.18, application.quit),
-        ):
+        for label, y, action in buttons:
             Button(
                 label,
                 parent=self,
@@ -90,7 +82,7 @@ class IntroSequence(Entity):
         )
         self._card = Text("", parent=camera.ui, origin=(0, 0), color=color.light_gray)
         self._hint = Text(
-            "[Espace] passer",
+            tr("intro.skip"),
             parent=camera.ui,
             origin=(0, 0),
             y=-0.42,
@@ -119,10 +111,10 @@ class IntroSequence(Entity):
 
     def _next_card(self) -> None:
         self._index += 1
-        if self._index >= len(INTRO_CARDS):
+        if self._index >= len(INTRO_CARD_KEYS):
             self._finish()
             return
-        self._card.text = INTRO_CARDS[self._index]
+        self._card.text = tr(INTRO_CARD_KEYS[self._index])
         self._card.alpha = 0.0
         self._elapsed = 0.0
 
