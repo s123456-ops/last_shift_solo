@@ -96,3 +96,11 @@ def test_monster_that_saw_the_player_hide_keeps_chasing():
                        player_hidden=True)
     monster.step(hidden)
     assert isinstance(monster.state, Chase)
+
+
+def test_is_searching_reflects_the_current_state():
+    monster = make_monster(sight_in_dark=0)
+    assert not monster.is_searching
+    monster.step(SEEN_WITH_LIGHT)
+    monster.step(HIDDEN)
+    assert monster.is_searching
