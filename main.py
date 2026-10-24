@@ -30,6 +30,7 @@ from view.coords import cell_to_world, world_to_cell
 from view.hud import Hud
 from view.level_renderer import WALL_HEIGHT, LevelRenderer
 from view.lighting import Lighting
+from view.monster_sounds import MonsterSounds
 from view.monster_view import MonsterView
 
 LEVEL_PATH = "levels/level1.txt"
@@ -65,13 +66,14 @@ DEFEAT_TEXT = "Le poste de gardien de nuit est à nouveau vacant."
 
 
 class GameController(Entity):
-    """Traduit les touches en actions pour la session, et son état en affichage."""
+    """Traduit les touches en actions pour la session, et son état en affichage et en son."""
 
     def __init__(
         self,
         session: GameSession,
         first_person: FirstPersonController,
         monster_view: MonsterView,
+        monster_sounds: MonsterSounds,
         renderer: LevelRenderer,
         lighting: Lighting,
         hud: Hud,
@@ -80,6 +82,7 @@ class GameController(Entity):
         self._session = session
         self._first_person = first_person
         self._monster_view = monster_view
+        self._monster_sounds = monster_sounds
         self._renderer = renderer
         self._lighting = lighting
         self._hud = hud
@@ -104,7 +107,6 @@ class GameController(Entity):
             return
         if self._hud.is_reading:
             return  # la lecture met le jeu en pause
-
         is_moving = (
             self._first_person.enabled and self._first_person.direction.length() > 0
         )
@@ -141,6 +143,14 @@ class GameController(Entity):
         if self._session.player.is_hidden != was_hidden:
             self._apply_hiding(result.item.cell)
 
+    def _open_document(self, text: str) -> None:
+        self._first_person.enabled = False  # on ne bouge plus pendant la lecture
+        self._hud.show_document(text)
+
+    def _close_document(self) -> None:
+        self._hud.close_document()
+        self._first_person.enabled = not self._session.player.is_hidden
+
     def _apply_hiding(self, cell) -> None:
         """Place la caméra dans le casier, ou la ressort là où le joueur est entré."""
         hidden = self._session.player.is_hidden
@@ -152,22 +162,31 @@ class GameController(Entity):
         self._first_person.enabled = not hidden
         self._hud.show_hiding(hidden)
 
+    def _monster_distance(self) -> float:
+        gap = self._monster_view.position - self._first_person.position
+        return Vec2(gap.x, gap.z).length()
+
     def _update_monster(self) -> None:
+        chasing = self._session.monster_is_chasing
         if self._monster_view.has_arrived():
             next_cell = self._session.next_monster_cell(self._player_cell())
             if next_cell is not None:
-                self._monster_view.move_to(next_cell)
                 chasing = self._session.monster_is_chasing
+                self._monster_view.move_to(next_cell)
                 self._monster_view.set_speed(
                     MONSTER_CHASE_SPEED if chasing else MONSTER_PATROL_SPEED
                 )
-        self._monster_view.advance(time.dt)
-        if self._monster_touches_player():
-            self._session.report_caught()
 
-    def _monster_touches_player(self) -> bool:
-        gap = self._monster_view.position - self._first_person.position
-        return Vec2(gap.x, gap.z).length() < CATCH_DISTANCE
+        self._monster_view.advance(time.dt)
+        if self._session.monster_is_active:
+            self._monster_sounds.update(
+                time.dt,
+                self._monster_distance(),
+                chasing,
+                self._session.monster_is_searching,
+            )
+        if self._monster_distance() < CATCH_DISTANCE:
+            self._session.report_caught()
 
     def _show_end_once(self) -> None:
         if self._end_shown:
@@ -175,15 +194,11 @@ class GameController(Entity):
         self._end_shown = True
         self._first_person.enabled = False
         won = self._session.status is GameStatus.WON
+        if won:
+            self._monster_sounds.stop_all()
+        else:
+            self._monster_sounds.on_caught()
         self._hud.show_end("Vous êtes sorti." if won else DEFEAT_TEXT, won)
-
-    def _open_document(self, text: str) -> None:
-        self._first_person.enabled = False  # on ne bouge plus pendant la lecture
-        self._hud.show_document(text)
-
-    def _close_document(self) -> None:
-        self._hud.close_document()
-        self._first_person.enabled = not self._session.player.is_hidden
 
 
 def build_session(level) -> GameSession:
@@ -243,7 +258,15 @@ def main() -> None:
     lighting.add_exit_light(level.exit_cell, WALL_HEIGHT)
 
     monster_view = MonsterView(app, level.monster_start, MONSTER_PATROL_SPEED)
-    GameController(session, first_person, monster_view, renderer, lighting, Hud())
+    GameController(
+        session,
+        first_person,
+        monster_view,
+        MonsterSounds(app),
+        renderer,
+        lighting,
+        Hud(),
+    )
     app.run()
 
 
