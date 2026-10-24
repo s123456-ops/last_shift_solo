@@ -1,4 +1,5 @@
 """Façade audio : le contrôleur ne parle qu'à cette classe."""
+
 from dataclasses import dataclass
 
 from view.ambiance import AmbienceSounds
@@ -37,8 +38,14 @@ class GameAudio:
         chasing = state.monster_active and state.monster_chasing
         if state.monster_active:
             self._monster.update(dt, near, chasing, state.monster_searching)
-        self._player.update(dt, state.player_moving, state.player_running,
-                            state.player_exhausted, near, chasing)
+        self._player.update(
+            dt,
+            state.player_moving,
+            state.player_running,
+            state.player_exhausted,
+            near,
+            chasing,
+        )
         self._ambience.update(dt, near, chasing, state.player_hidden, state.power_on)
         if state.power_on and not self._power_was_on:
             self._ambience.on_power_restored()

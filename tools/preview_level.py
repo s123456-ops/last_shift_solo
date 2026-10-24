@@ -16,7 +16,6 @@ from view.level_renderer import WALL_HEIGHT, LevelRenderer
 from view.lighting import Lighting
 from view.model_loader import MONSTER, ModelLoadError, place_model
 
-
 DEFAULT_LEVEL = "levels/level1.txt"
 MOUSE_SENSITIVITY = Vec2(25, 25)
 

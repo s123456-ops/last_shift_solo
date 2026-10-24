@@ -1,3 +1,5 @@
+import itertools
+
 from core.level import parse_level
 from core.pathfinding import Pathfinder
 
@@ -36,7 +38,7 @@ def test_path_goes_around_walls_and_is_shortest():
 def test_path_is_made_of_adjacent_steps():
     path = Pathfinder(parse_level(ROOM)).find_path((1, 1), (3, 5))
     steps = [(1, 1)] + path
-    assert all(_are_adjacent(a, b) for a, b in zip(steps, steps[1:]))
+    assert all(_are_adjacent(a, b) for a, b in itertools.pairwise(steps))
 
 
 def test_unreachable_goal_returns_empty_path():

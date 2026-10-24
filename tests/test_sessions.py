@@ -85,10 +85,11 @@ def test_exit_without_power_does_not_win():
     session.interact((4, 1))
     assert session.status is GameStatus.PLAYING
 
+
 def test_power_on_reflects_the_repaired_panel():
     session = make_session()
     assert not session.power_on
-    session.interact((4, 2))   # fusible
-    session.interact((4, 6))   # code
-    session.interact((4, 3))   # tableau
+    session.interact((4, 2))  # fusible
+    session.interact((4, 6))  # code
+    session.interact((4, 3))  # tableau
     assert session.power_on
