@@ -2,7 +2,11 @@
 
 from dataclasses import dataclass
 
+from direct.showbase.Audio3DManager import Audio3DManager
+from ursina import Entity, Vec3, camera
+
 from view.ambiance import AmbienceSounds
+from view.drips import DripSounds
 from view.monster_sounds import MonsterSounds
 from view.player_sounds import PlayerSounds
 from view.sound_bank import SoundBank, closeness
@@ -26,9 +30,16 @@ class AudioState:
 class GameAudio:
     """Coordonne les sons du monstre, du joueur et de l'ambiance."""
 
-    def __init__(self, app) -> None:
+    def __init__(self, app, monster: Entity, drip_points: list[Vec3]) -> None:
         bank = SoundBank(app)
+        # Son en 3D : on entend de quel côté vient chaque son. L'écart de volume
+        # selon la distance reste calculé par le jeu (closeness), d'où l'atténuation à 0.
+        audio3d = Audio3DManager(app.sfxManagerList[0], camera)
+        audio3d.setDropOffFactor(0)
         self._monster = MonsterSounds(bank)
+        for sound in self._monster.sounds():
+            audio3d.attachSoundToObject(sound, monster)
+        self._drips = DripSounds(bank, audio3d, drip_points)
         self._player = PlayerSounds(bank)
         self._ambience = AmbienceSounds(bank)
         self._power_was_on = False
@@ -47,6 +58,7 @@ class GameAudio:
             chasing,
         )
         self._ambience.update(dt, near, chasing, state.player_hidden, state.power_on)
+        self._drips.update(dt)
         if state.power_on and not self._power_was_on:
             self._ambience.on_power_restored()
         self._power_was_on = state.power_on

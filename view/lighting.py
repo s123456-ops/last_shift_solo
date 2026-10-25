@@ -6,9 +6,10 @@ Utilise l'éclairage automatique de Panda3D, le moteur sur lequel Ursina est con
 import random
 
 from panda3d.core import AmbientLight, Fog, PerspectiveLens, PointLight, Spotlight
-from ursina import Entity, camera, color, scene, window
+from ursina import Entity, camera, color, scene, time, window
 
 from core.level import Cell
+from view.camera_motion import approach_angle
 from view.coords import cell_to_world
 
 AMBIENT_COLOR = (0.025, 0.025, 0.03, 1)  # avant : 0.09
@@ -24,6 +25,8 @@ EXIT_ATTENUATION = (1.0, 0.3, 0.3)
 FIXTURE_SCALE = (0.4, 0.08, 0.4)
 FLICKER_CHANCE = 0.02  # probabilité de grésiller, à chaque image
 FLICKER_DIM = 0.15  # intensité pendant un grésillement
+FLASHLIGHT_FOLLOW_SPEED = 12  # plus c'est bas, plus la lampe traîne derrière le regard
+FLASHLIGHT_TREMBLE = 1.2  # degrés : la main tremble quand le souffle manque
 
 
 def make_lit(entity: Entity) -> Entity:
@@ -46,6 +49,30 @@ class Flicker(Entity):
         self._light.setColor((red * factor, green * factor, blue * factor, alpha))
 
 
+class FlashlightRig(Entity):
+    """La main qui tient la lampe : elle suit le regard, avec un léger retard.
+
+    Ursina appelle update() à chaque image, même sur l'écran titre.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.trembling = False
+
+    def update(self) -> None:
+        self.world_position = camera.world_position
+        ratio = time.dt * FLASHLIGHT_FOLLOW_SPEED
+        self.rotation_x = approach_angle(
+            self.rotation_x, camera.world_rotation_x, ratio
+        )
+        self.rotation_y = approach_angle(
+            self.rotation_y, camera.world_rotation_y, ratio
+        )
+        if self.trembling:
+            self.rotation_x += random.uniform(-1, 1) * FLASHLIGHT_TREMBLE
+            self.rotation_y += random.uniform(-1, 1) * FLASHLIGHT_TREMBLE
+
+
 class Lighting:
     """Met en place l'ambiance, les lumières fixes, et pilote la lampe torche.
 
@@ -58,6 +85,7 @@ class Lighting:
         self._flashlight_on = True
         self._ambient = None
         self._fog = None
+        self._rig: FlashlightRig | None = None
 
     def setup(self) -> None:
         window.color = color.black
@@ -77,6 +105,11 @@ class Lighting:
             scene.setLight(self._flashlight_node)
         else:
             scene.clearLight(self._flashlight_node)
+
+    def set_trembling(self, trembling: bool) -> None:
+        """La lampe tremble tant que le joueur est à bout de souffle."""
+        if self._rig is not None:
+            self._rig.trembling = trembling
 
     def set_brightness(self, factor: float) -> None:
         """Éclaircit (factor > 1) ou assombrit (factor < 1) l'ambiance et le brouillard.
@@ -150,5 +183,6 @@ class Lighting:
         lens = PerspectiveLens()
         lens.setFov(FLASHLIGHT_ANGLE)
         flashlight.setLens(lens)
-        self._flashlight_node = camera.attachNewNode(flashlight)
+        self._rig = FlashlightRig()
+        self._flashlight_node = self._rig.attachNewNode(flashlight)
         scene.setLight(self._flashlight_node)

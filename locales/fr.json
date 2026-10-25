@@ -84,5 +84,18 @@
   "retro.on": "activé",
   "retro.off": "désactivé",
   "door.open_prompt": "Ouvrir la porte",
-  "door.close_prompt": "Fermer la porte"
+  "door.close_prompt": "Fermer la porte",
+  "sign.guard_post": "POSTE DE GARDE",
+  "sign.hall": "HALL D'ACCUEIL",
+  "sign.storeroom": "RÉSERVE",
+  "sign.office": "BUREAU DR SAUNIER",
+  "sign.cell_3": "CELLULE 3",
+  "sign.maintenance": "MAINTENANCE",
+  "sign.break_room": "SALLE DE REPOS",
+  "sign.infirmary": "INFIRMERIE",
+  "sign.laboratory": "LABORATOIRE C",
+  "sign.locker_room": "VESTIAIRES",
+  "sign.archives": "ARCHIVES",
+  "sign.loading_dock": "QUAI DE CHARGEMENT",
+  "sign.exit_right": "SORTIE"
 }

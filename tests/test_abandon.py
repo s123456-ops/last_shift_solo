@@ -1,5 +1,12 @@
 from core.level import FLOOR, load_level, parse_level
-from view.abandon import WALL_DEBRIS, WALL_VARIANTS, scatter_debris, wall_textures
+from view.abandon import (
+    CABLE_LENGTH,
+    WALL_DEBRIS,
+    WALL_VARIANTS,
+    ceiling_holes,
+    scatter_debris,
+    wall_textures,
+)
 
 LEVEL = load_level("levels/level1.txt")
 
@@ -41,3 +48,23 @@ def test_every_wall_gets_a_known_texture():
 def test_no_debris_when_density_is_zero():
     level = parse_level("#####\n#PFE#\n#GNM#\n#####")
     assert scatter_debris(level, density=0) == []
+
+
+def test_ceiling_holes_are_the_same_every_game():
+    assert ceiling_holes(LEVEL) == ceiling_holes(LEVEL)
+
+
+def test_ceiling_holes_are_above_free_floor():
+    holes = ceiling_holes(LEVEL)
+    assert holes
+    for hole in holes:
+        row, col = hole.cell
+        assert LEVEL.rows[row][col] == FLOOR, hole.cell
+
+
+def test_cables_hang_above_the_player_head():
+    eye_height, ceiling = 2.0, 3.0
+    assert ceiling - CABLE_LENGTH[1] >= eye_height
+    for hole in ceiling_holes(LEVEL):
+        for cable in hole.cables:
+            assert CABLE_LENGTH[0] <= cable.length <= CABLE_LENGTH[1]
