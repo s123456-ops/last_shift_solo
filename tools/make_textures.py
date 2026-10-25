@@ -8,10 +8,11 @@ téléchargée, donc aucune licence à créditer. Le hasard est fixé (SEED) :
 relancer le script redonne exactement les mêmes images.
 """
 
+import math
 import random
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFilter
 
 OUTPUT = Path(__file__).resolve().parent.parent / "assets" / "textures"
 SEED = 7
@@ -139,10 +140,176 @@ def make_ceiling(rng: random.Random) -> Image.Image:
     return image
 
 
+# --- Variantes de murs : le bâtiment abandonné depuis six ans -----------------
+
+CRACK = (88, 80, 68)
+BRICK = (110, 66, 52)
+MORTAR = (96, 90, 80)
+
+
+def _crack(
+    draw: ImageDraw.ImageDraw, rng: random.Random, x: int, y: int, steps: int
+) -> None:
+    """Une fissure qui descend en zigzag et se divise parfois en deux."""
+    for _ in range(steps):
+        nx, ny = x + rng.randint(-4, 4), y + rng.randint(2, 6)
+        draw.line((x, y, nx, ny), fill=CRACK, width=1)
+        if rng.random() < 0.08:
+            _crack(draw, rng, nx, ny, steps // 3)
+        x, y = max(1, min(SIZE - 2, nx)), ny
+
+
+def make_wall_cracked(rng: random.Random) -> Image.Image:
+    """Le mur, traversé de fissures du plafond jusqu'à la faïence."""
+    image = make_wall(rng)
+    draw = ImageDraw.Draw(image)
+    for _ in range(2):
+        _crack(draw, rng, rng.randrange(8, SIZE - 8), rng.randint(0, 40), 16)
+    return image
+
+
+def make_wall_water(rng: random.Random) -> Image.Image:
+    """Une infiltration : grande coulure brune et peinture qui cloque."""
+    image = make_wall(rng)
+    pixels = image.load()
+    center = rng.randint(20, SIZE - 20)
+    for y in range(image.height - 10):
+        spread = 6 + y // 6  # la tache s'élargit en descendant
+        for x in range(max(0, center - spread), min(SIZE, center + spread)):
+            edge = abs(x - center) / spread
+            pixels[x, y] = _blend(
+                pixels[x, y], (70, 66, 44), 0.6 * (1 - edge) * (1 - y / image.height)
+            )
+    for _ in range(6):  # cloques de peinture, à peine plus claires que le mur
+        x, y = rng.randrange(SIZE), rng.randrange(10, 100)
+        ImageDraw.Draw(image).ellipse((x, y, x + 2, y + 1), fill=(182, 174, 150))
+    return image
+
+
+def make_wall_hole(rng: random.Random) -> Image.Image:
+    """Un pan de plâtre arraché, qui laisse voir les briques derrière."""
+    image = make_wall(rng)
+    bricks = Image.new("RGB", image.size, MORTAR)
+    draw = ImageDraw.Draw(bricks)
+    for row, y in enumerate(range(0, image.height, 8)):
+        offset = 6 if row % 2 else 0
+        for x in range(-offset, SIZE, 12):
+            draw.rectangle((x + 1, y + 1, x + 11, y + 7), fill=vary(rng, BRICK, 14))
+    mask = Image.new("L", image.size, 0)
+    shape = ImageDraw.Draw(mask)
+    cx, cy = rng.randint(22, SIZE - 22), rng.randint(40, 80)
+    points = []
+    for step in range(12):  # contour irrégulier du trou
+        angle = step / 12 * 6.283
+        radius = rng.randint(10, 18)
+        points.append(
+            (cx + radius * math.cos(angle), cy + radius * 1.4 * math.sin(angle))
+        )
+    shape.polygon(points, fill=255)
+    edge = mask.filter(ImageFilter.MaxFilter(3))
+    image.paste(Image.new("RGB", image.size, (60, 56, 50)), (0, 0), edge)  # bord sombre
+    image.paste(bricks, (0, 0), mask)
+    return image
+
+
+def make_wall_claws(rng: random.Random) -> Image.Image:
+    """Quatre griffures parallèles, à hauteur d'homme. Personne n'en parle."""
+    image = make_wall(rng)
+    draw = ImageDraw.Draw(image)
+    x0, y0 = rng.randint(12, 26), rng.randint(36, 60)
+    for claw in range(4):
+        x = x0 + claw * 6
+        draw.line(
+            (x, y0 + claw * 2, x + 22, y0 + 58 + claw * 2), fill=(40, 34, 30), width=2
+        )
+        draw.line(
+            (x + 1, y0 + claw * 2, x + 23, y0 + 58 + claw * 2),
+            fill=(150, 140, 120),
+            width=1,
+        )
+    return image
+
+
+# --- Débris au sol (images avec transparence) ----------------------------------
+
+
+def _transparent() -> Image.Image:
+    return Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+
+
+def make_rubble(rng: random.Random) -> Image.Image:
+    """Des gravats : morceaux de plâtre et de brique, dans un halo de poussière."""
+    image = _transparent()
+    draw = ImageDraw.Draw(image)
+    draw.ellipse((6, 10, SIZE - 6, SIZE - 8), fill=(120, 114, 100, 90))  # poussière
+    for _ in range(45):
+        x, y = rng.randint(10, SIZE - 14), rng.randint(14, SIZE - 14)
+        size = rng.randint(2, 6)
+        base = rng.choice([(150, 146, 134), (120, 116, 106), BRICK, (90, 88, 82)])
+        draw.rectangle((x, y, x + size, y + size - 1), fill=(*vary(rng, base, 12), 255))
+    return image
+
+
+def make_papers(rng: random.Random) -> Image.Image:
+    """Des feuilles éparpillées, jaunies, parfois piétinées."""
+    image = _transparent()
+    for _ in range(4):
+        sheet = Image.new("RGBA", (22, 28), (*vary(rng, (214, 206, 180), 10), 255))
+        lines = ImageDraw.Draw(sheet)
+        for y in range(5, 25, 3):
+            lines.line((3, y, rng.randint(10, 19), y), fill=(110, 106, 96, 255))
+        sheet = sheet.rotate(rng.randint(0, 359), expand=True)
+        image.alpha_composite(
+            sheet, (rng.randint(0, SIZE - 36), rng.randint(0, SIZE - 36))
+        )
+    return image
+
+
+def make_stain(rng: random.Random) -> Image.Image:
+    """Une tache sombre et irrégulière, d'origine inconnue."""
+    image = _transparent()
+    pixels = image.load()
+    blobs = [
+        (rng.randint(20, 44), rng.randint(20, 44), rng.randint(8, 16)) for _ in range(5)
+    ]
+    for x in range(SIZE):
+        for y in range(SIZE):
+            strength = max(
+                (1 - ((x - bx) ** 2 + (y - by) ** 2) ** 0.5 / r for bx, by, r in blobs),
+                default=0,
+            )
+            if strength > 0:
+                pixels[x, y] = (46, 32, 24, int(min(1.0, strength * 1.6) * 170))
+    return image
+
+
+def make_broken_tiles(rng: random.Random) -> Image.Image:
+    """Des éclats de carrelage, arrachés du sol."""
+    image = _transparent()
+    draw = ImageDraw.Draw(image)
+    for _ in range(9):
+        x, y = rng.randint(6, SIZE - 18), rng.randint(6, SIZE - 18)
+        points = [(x + rng.randint(0, 12), y + rng.randint(0, 12)) for _ in range(4)]
+        draw.polygon(
+            points,
+            fill=(*vary(rng, (176, 180, 172), 12), 255),
+            outline=(92, 94, 90, 255),
+        )
+    return image
+
+
 TEXTURES = {
     "floor_tiles": make_floor,
     "wall_tiles": make_wall,
     "ceiling_tiles": make_ceiling,
+    "wall_cracked": make_wall_cracked,
+    "wall_water": make_wall_water,
+    "wall_hole": make_wall_hole,
+    "wall_claws": make_wall_claws,
+    "debris_rubble": make_rubble,
+    "debris_papers": make_papers,
+    "debris_stain": make_stain,
+    "debris_tiles": make_broken_tiles,
 }
 
 

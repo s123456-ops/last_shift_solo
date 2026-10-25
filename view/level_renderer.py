@@ -6,9 +6,11 @@ Ce module affiche ; il ne contient aucune règle du jeu.
 import math
 from dataclasses import dataclass
 
+from panda3d.core import TransparencyAttrib
 from ursina import Entity, Vec3, color, destroy
 
 from core.level import Cell, FacilityMap
+from view.abandon import scatter_debris, wall_textures
 from view.coords import cell_to_world
 from view.furniture import DESK, SHELF, FurnitureStyle, place_furniture
 from view.lighting import make_lit
@@ -23,7 +25,6 @@ from view.model_loader import (
 WALL_HEIGHT = 3.0
 # Textures générées par tools/make_textures.py, rangées dans assets/textures/.
 FLOOR_TEXTURE = "floor_tiles"
-WALL_TEXTURE = "wall_tiles"  # dessinée pour un mur entier : 1 case de large, 3 de haut
 CEILING_TEXTURE = "ceiling_tiles"
 
 
@@ -70,6 +71,8 @@ SECURITY_DOOR_STYLE = ItemStyle(
 )
 DOOR_SIZE = (1.0, 2.4, 0.08)  # largeur, hauteur, épaisseur du battant
 DOOR_TEXTURE = "door"
+DEBRIS_HEIGHT = 0.01  # juste au-dessus du sol
+DEBRIS_LAYER = 0.0005
 DOOR_OPEN_ANGLE = 95  # degrés : la porte ouverte se rabat presque contre le mur
 
 
@@ -88,6 +91,7 @@ class LevelRenderer:
     def build(self) -> None:
         self._build_floor_and_ceiling()
         self._build_walls()
+        self._build_debris()
         self._build_items()
         self._build_doors()
 
@@ -140,13 +144,14 @@ class LevelRenderer:
         )
 
     def _build_walls(self) -> None:
+        textures = wall_textures(self._level)  # fissures, humidité, trous, griffures
         for cell in self._level.wall_cells():
             make_lit(
                 Entity(
                     model="cube",
                     position=cell_to_world(cell, self._wall_height / 2),
                     scale=(1, self._wall_height, 1),
-                    texture=WALL_TEXTURE,
+                    texture=textures[cell],
                     color=color.white,
                     collider="box",
                 )
@@ -201,6 +206,23 @@ class LevelRenderer:
                 visible=False,
             )
         return holder
+
+    def _build_debris(self) -> None:
+        """Papiers, gravats, éclats de carrelage et taches, posés à plat sur le sol."""
+        for index, debris in enumerate(scatter_debris(self._level)):
+            dx, dz = debris.offset
+            height = DEBRIS_HEIGHT + index * DEBRIS_LAYER  # évite qu'ils se chevauchent
+            decal = make_lit(
+                Entity(
+                    model="quad",
+                    texture=debris.texture,
+                    position=cell_to_world(debris.cell, height) + Vec3(dx, 0, dz),
+                    rotation=(90, debris.angle, 0),
+                    scale=debris.size,
+                    double_sided=True,
+                )
+            )
+            decal.setTransparency(TransparencyAttrib.MAlpha)
 
     def _build_doors(self) -> None:
         """Chaque battant tourne autour d'un gond posé contre le mur."""
