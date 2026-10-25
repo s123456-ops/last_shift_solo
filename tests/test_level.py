@@ -63,7 +63,7 @@ def test_shipped_level_is_valid():
     assert not level.is_wall(level.player_start)
 
 
-"""The last test checks that the real game level is valid. If a teammate ever breaks the map, the tests will say so before the game is even launched."""
+"""The last test checks that the real game level is valid. If an edit ever breaks the map, the tests will say so before the game is even launched."""
 
 
 def test_missing_fuse_raises():
