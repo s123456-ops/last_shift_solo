@@ -298,6 +298,43 @@ def make_broken_tiles(rng: random.Random) -> Image.Image:
     return image
 
 
+def make_ceiling_hole(rng: random.Random) -> Image.Image:
+    """Une dalle manquante : du noir, quelques poutres devinées, des bords cassés."""
+    image = _transparent()
+    draw = ImageDraw.Draw(image)
+    left, top = 16, 16  # la dalle manquante est centrée dans la case
+    points = []
+    for step in range(16):  # bord irrégulier : la dalle a été arrachée
+        angle = step / 16 * 2 * math.pi
+        radius = rng.uniform(17, 23)
+        points.append((32 + radius * math.cos(angle), 32 + radius * math.sin(angle)))
+    draw.polygon(points, fill=(10, 10, 12, 255))
+    for y in (left + 8, top + 24):  # poutres et gaines dans le noir
+        draw.line(
+            (left - 2, y, left + 34, y + rng.randint(-2, 2)),
+            fill=(34, 32, 30, 255),
+            width=2,
+        )
+    draw.polygon(points, outline=(110, 108, 100, 255))
+    return image
+
+
+def make_fallen_tile(rng: random.Random) -> Image.Image:
+    """La dalle tombée au sol, cassée en morceaux."""
+    image = _transparent()
+    for _ in range(3):
+        piece = Image.new(
+            "RGBA", (rng.randint(14, 22), rng.randint(12, 20)), (150, 148, 140, 255)
+        )
+        dots = ImageDraw.Draw(piece)
+        for x in range(2, piece.width, 4):
+            for y in range(2, piece.height, 4):
+                dots.point((x, y), fill=(112, 110, 104, 255))
+        piece = piece.rotate(rng.randint(0, 359), expand=True)
+        image.alpha_composite(piece, (rng.randint(4, 30), rng.randint(4, 30)))
+    return image
+
+
 TEXTURES = {
     "floor_tiles": make_floor,
     "wall_tiles": make_wall,
@@ -310,6 +347,8 @@ TEXTURES = {
     "debris_papers": make_papers,
     "debris_stain": make_stain,
     "debris_tiles": make_broken_tiles,
+    "ceiling_hole": make_ceiling_hole,
+    "debris_ceiling": make_fallen_tile,
 }
 
 

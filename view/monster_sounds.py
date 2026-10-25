@@ -39,6 +39,17 @@ class MonsterSounds:
         if searching:
             self._update_breaths(dt, closeness)
 
+    def sounds(self) -> list[AudioSound]:
+        """Tous les sons du monstre, pour les accrocher à sa position dans l'espace."""
+        return [
+            *self._growls,
+            *self._short_steps,
+            *self._heavy_steps,
+            *self._breaths,
+            *self._spotted,
+            *self._caught,
+        ]
+
     def on_caught(self) -> None:
         self.stop_all()
         self._bank.play(self._caught, 1.0)

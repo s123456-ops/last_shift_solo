@@ -10,7 +10,9 @@ from panda3d.core import TransparencyAttrib
 from ursina import Entity, Vec3, color, destroy
 
 from core.level import Cell, FacilityMap
-from view.abandon import scatter_debris, wall_textures
+from core.signs import Sign
+from core.texts import current_language
+from view.abandon import ceiling_holes, scatter_debris, wall_textures
 from view.coords import cell_to_world
 from view.furniture import DESK, SHELF, FurnitureStyle, place_furniture
 from view.lighting import make_lit
@@ -72,7 +74,15 @@ SECURITY_DOOR_STYLE = ItemStyle(
 DOOR_SIZE = (1.0, 2.4, 0.08)  # largeur, hauteur, épaisseur du battant
 DOOR_TEXTURE = "door"
 DEBRIS_HEIGHT = 0.01  # juste au-dessus du sol
+SIGN_SIZE = (0.9, 0.225)  # largeur, hauteur d'un panneau, en mètres
+SIGN_HEIGHT = 2.25  # au-dessus des portes
+GLOWING_SIGNS = {
+    "sign.exit_right"
+}  # les sorties de secours restent visibles dans le noir
 DEBRIS_LAYER = 0.0005
+FALLEN_TILE_HEIGHT = 0.04  # au-dessus des autres débris
+CABLE_COLOR = color.rgb32(26, 26, 26)
+CABLE_THICKNESS = 0.025
 DOOR_OPEN_ANGLE = 95  # degrés : la porte ouverte se rabat presque contre le mur
 
 
@@ -80,18 +90,27 @@ class LevelRenderer:
     """Construit les murs, le sol, le plafond et les objets d'un niveau."""
 
     def __init__(
-        self, level: FacilityMap, wall_height: float = WALL_HEIGHT, app=None
+        self,
+        level: FacilityMap,
+        wall_height: float = WALL_HEIGHT,
+        app=None,
+        signs: list[Sign] | tuple[Sign, ...] = (),
     ) -> None:
         self._level = level
+        self._signs = tuple(signs)
+        self._sign_entities: list[tuple[Sign, Entity]] = []
         self._app = app  # sans application, pas de modèles 3D : des blocs de couleur
         self._wall_height = wall_height
         self._items: dict[Cell, Entity] = {}
         self._doors: dict[Cell, tuple[Entity, Entity]] = {}  # (gond, battant)
+        self._water_points: list[Vec3] = []
 
     def build(self) -> None:
         self._build_floor_and_ceiling()
         self._build_walls()
         self._build_debris()
+        self._build_ceiling_damage()
+        self._build_signs()
         self._build_items()
         self._build_doors()
 
@@ -110,6 +129,16 @@ class LevelRenderer:
             panel.collider = None if is_open else "box"
             moved.append(door.cell)
         return moved
+
+    @property
+    def water_points(self) -> list[Vec3]:
+        """Le haut des murs humides donnant sur une pièce : d'où tombent les gouttes."""
+        return self._water_points
+
+    def show_signs_in(self, language: str) -> None:
+        """Change le texte des panneaux, par exemple quand on change de langue."""
+        for sign, entity in self._sign_entities:
+            entity.texture = _sign_texture(sign, language)
 
     def remove_item(self, cell: Cell) -> None:
         """Retire l'objet affiché sur une case, par exemple quand il est ramassé."""
@@ -145,6 +174,11 @@ class LevelRenderer:
 
     def _build_walls(self) -> None:
         textures = wall_textures(self._level)  # fissures, humidité, trous, griffures
+        self._water_points = [
+            cell_to_world(cell, self._wall_height - 0.4)
+            for cell, texture in textures.items()
+            if texture == "wall_water" and self._faces_a_room(cell)
+        ]
         for cell in self._level.wall_cells():
             make_lit(
                 Entity(
@@ -207,6 +241,66 @@ class LevelRenderer:
             )
         return holder
 
+    def _build_ceiling_damage(self) -> None:
+        """Dalles tombées : un trou noir au plafond, la dalle cassée au sol, des câbles."""
+        for hole in ceiling_holes(self._level):
+            self._flat_decal(
+                "ceiling_hole", cell_to_world(hole.cell, self._wall_height - 0.01), -90
+            )
+            self._flat_decal(
+                "debris_ceiling", cell_to_world(hole.cell, FALLEN_TILE_HEIGHT), 90
+            )
+            for cable in hole.cables:
+                dx, dz = cable.offset
+                make_lit(
+                    Entity(
+                        model="cube",
+                        position=cell_to_world(
+                            hole.cell, self._wall_height - cable.length / 2
+                        )
+                        + Vec3(dx, 0, dz),
+                        rotation_z=cable.tilt,
+                        scale=(CABLE_THICKNESS, cable.length, CABLE_THICKNESS),
+                        color=CABLE_COLOR,
+                    )
+                )
+
+    @staticmethod
+    def _flat_decal(texture: str, position: Vec3, rotation_x: float) -> None:
+        """Une image à plat, tournée vers le haut (90) ou vers le bas (-90)."""
+        decal = make_lit(
+            Entity(
+                model="quad",
+                texture=texture,
+                position=position,
+                rotation_x=rotation_x,
+                double_sided=True,
+            )
+        )
+        decal.setTransparency(TransparencyAttrib.MAlpha)
+
+    def _build_signs(self) -> None:
+        """Chaque panneau est collé sur la face du mur, tourné vers le couloir."""
+        language = current_language()
+        for sign in self._signs:
+            d_row, d_col = sign.facing
+            outward = Vec3(d_col, 0, -d_row)  # du mur vers le couloir
+            plate = Entity(
+                model="quad",
+                texture=_sign_texture(sign, language),
+                position=cell_to_world(sign.wall, SIGN_HEIGHT) + outward * 0.51,
+                rotation_y=math.degrees(math.atan2(-outward.x, -outward.z)),
+                scale=SIGN_SIZE,
+            )
+            if sign.key not in GLOWING_SIGNS:
+                make_lit(plate)  # les autres panneaux restent dans l'ombre
+            self._sign_entities.append((sign, plate))
+
+    def _faces_a_room(self, cell: Cell) -> bool:
+        row, col = cell
+        neighbours = ((row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1))
+        return any(not self._level.is_wall(n) for n in neighbours)
+
     def _build_debris(self) -> None:
         """Papiers, gravats, éclats de carrelage et taches, posés à plat sur le sol."""
         for index, debris in enumerate(scatter_debris(self._level)):
@@ -268,3 +362,8 @@ class LevelRenderer:
                 collider="box" if style.solid else None,
             )
         )
+
+
+def _sign_texture(sign: Sign, language: str) -> str:
+    """« sign.archives » en français → la texture sign_archives_fr."""
+    return f"sign_{sign.key.removeprefix('sign.')}_{language}"

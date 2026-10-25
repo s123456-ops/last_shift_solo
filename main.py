@@ -32,8 +32,10 @@ from core.level import LevelFormatError, load_level
 from core.monster import Monster
 from core.player import Player
 from core.session import GameSession, GameStatus
+from core.signs import SignFormatError, load_signs
 from core.stamina import Stamina
 from core.texts import SUPPORTED_LANGUAGES, current_language, set_language, tr
+from view.camera_motion import HeadBob
 from view.coords import cell_to_world, world_to_cell
 from view.game_audio import AudioState, GameAudio, set_master_volume
 from view.hud import Hud
@@ -50,6 +52,7 @@ from view.title_backdrop import TitleBackdrop
 GAME_LANGUAGE = "en"
 LEVEL_PATH = "levels/level1.txt"
 DOCUMENTS_PATH = "levels/level1_documents.{language}.txt"
+SIGNS_PATH = "levels/level1_signs.txt"
 
 FLASHLIGHT_CAPACITY = 100
 BATTERY_CHARGE = 40  # une pile recharge 40 % de la batterie
@@ -113,6 +116,8 @@ class GameController(Entity):
             settings, on_resume=self._toggle_pause, on_quit=application.quit
         )
         self._input_grace = START_INPUT_GRACE
+        self._head_bob = HeadBob()
+        self._eye_height = first_person.camera_pivot.y
 
     def input(self, key: str) -> None:
         if self._session.is_over:
@@ -156,10 +161,21 @@ class GameController(Entity):
         )
         self._session.update(time.dt, wants_to_run=is_moving and held_keys["shift"])
         self._refresh_player_view()
+        self._move_head(is_moving)
         for _ in self._renderer.sync_doors(self._session.doors):
             self._audio.on_locker()  # grincement métallique d'une porte qui bouge
         self._update_monster()
         self._update_audio(is_moving)
+
+    def _move_head(self, is_moving: bool) -> None:
+        """Balancement de la tête en marchant, lampe qui tremble à bout de souffle."""
+        stamina = self._session.player.stamina
+        vertical, sideways = self._head_bob.update(
+            time.dt, is_moving, stamina.is_running
+        )
+        self._first_person.camera_pivot.y = self._eye_height + vertical
+        self._first_person.camera_pivot.x = sideways
+        self._lighting.set_trembling(stamina.is_exhausted)
 
     def _toggle_pause(self) -> None:
         """Fige la partie ; le contrôleur du joueur libère ou capture la souris."""
@@ -356,9 +372,9 @@ def build_session(
     )
 
 
-def build_world(app, level) -> tuple[LevelRenderer, Lighting]:
+def build_world(app, level, signs) -> tuple[LevelRenderer, Lighting]:
     """Le décor et l'éclairage, partagés par l'écran titre et la partie."""
-    renderer = LevelRenderer(level, app=app)
+    renderer = LevelRenderer(level, app=app, signs=signs)
     renderer.build()
     lighting = Lighting()
     lighting.setup()
@@ -390,7 +406,7 @@ def start_game(
         session,
         first_person,
         monster_view,
-        GameAudio(app),
+        GameAudio(app, monster_view.entity, renderer.water_points),
         renderer,
         lighting,
         Hud(),
@@ -419,17 +435,19 @@ def main() -> None:
         # on assemble une première partie pour vérifier les fichiers
         # avant d'ouvrir la fenêtre ; la vraie est créée après le choix du mode
         build_session(level, language, peaceful=False, difficulty=NORMAL)
+        signs = load_signs(SIGNS_PATH, level)
     except (
         FileNotFoundError,
         LevelFormatError,
         DocumentFormatError,
+        SignFormatError,
         ValueError,
     ) as error:
         sys.exit(f"Impossible de préparer la partie : {error}")
 
     app = Ursina()
     window.color = color.black
-    renderer, lighting = build_world(app, level)
+    renderer, lighting = build_world(app, level, signs)
     settings = default_settings()
     settings.brightness.bind(lighting.set_brightness)
     settings.volume.bind(lambda volume: set_master_volume(app, volume))
@@ -453,7 +471,12 @@ def main() -> None:
             )
         )
 
-    TitleScreen(on_start=begin, brightness=settings.brightness, difficulty=difficulty)
+    TitleScreen(
+        on_start=begin,
+        brightness=settings.brightness,
+        difficulty=difficulty,
+        on_language=lambda: renderer.show_signs_in(current_language()),
+    )
     app.run()
 
 

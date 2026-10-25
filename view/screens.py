@@ -34,9 +34,11 @@ class TitleScreen(Entity):
         on_start: Callable[[bool], None],
         brightness: Setting,
         difficulty: Setting,
+        on_language: Callable[[], None] | None = None,
     ) -> None:
         super().__init__(parent=camera.ui)
         self._on_start = on_start
+        self._on_language = on_language
         self._brightness = brightness
         self._difficulty = difficulty
         mouse.locked = False
@@ -111,6 +113,8 @@ class TitleScreen(Entity):
     def _next_language(self) -> None:
         index = SUPPORTED_LANGUAGES.index(current_language())
         set_language(SUPPORTED_LANGUAGES[(index + 1) % len(SUPPORTED_LANGUAGES)])
+        if self._on_language is not None:
+            self._on_language()  # par exemple, les panneaux du décor
         self._rebuild()
 
     def _next_brightness(self) -> None:

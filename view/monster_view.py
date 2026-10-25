@@ -41,6 +41,11 @@ class MonsterView:
             )
 
     @property
+    def entity(self) -> Entity:
+        """Le point qui se déplace : les sons du monstre y sont accrochés."""
+        return self._entity
+
+    @property
     def position(self) -> Vec3:
         return self._entity.position
 

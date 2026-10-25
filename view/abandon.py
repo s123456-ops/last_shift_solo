@@ -21,6 +21,9 @@ DEBRIS_DENSITY = 0.10  # part des cases de sol qui reçoivent un débris
 WALL_DEBRIS = "debris_rubble"  # les gravats tombent au pied des murs
 FLOOR_DEBRIS = ("debris_papers", "debris_stain", "debris_tiles")
 RUBBLE_CHANCE = 0.6  # contre un mur, le débris est le plus souvent des gravats
+CEILING_HOLE_DENSITY = 0.05  # part des cases de sol sous une dalle tombée
+MAX_CABLES = 2
+CABLE_LENGTH = (0.4, 0.9)  # mètres : le bas des câbles reste au-dessus des têtes
 
 
 @dataclass(frozen=True)
@@ -70,3 +73,42 @@ def scatter_debris(
                 )
             )
     return debris
+
+
+@dataclass(frozen=True)
+class Cable:
+    """Un câble qui pend d'un trou du plafond."""
+
+    offset: tuple[float, float]
+    length: float
+    tilt: float  # inclinaison, en degrés
+
+
+@dataclass(frozen=True)
+class CeilingHole:
+    """Une dalle de plafond tombée : un trou en haut, la dalle cassée au sol."""
+
+    cell: Cell
+    cables: tuple[Cable, ...]
+
+
+def ceiling_holes(
+    level: FacilityMap, seed: int = DECOR_SEED, density: float = CEILING_HOLE_DENSITY
+) -> list[CeilingHole]:
+    """Les dalles tombées, au-dessus de cases de sol libres."""
+    rng = random.Random(seed + 2)
+    holes = []
+    for row, line in enumerate(level.rows):
+        for col, tile in enumerate(line):
+            if tile != FLOOR or rng.random() >= density:
+                continue
+            cables = tuple(
+                Cable(
+                    offset=(rng.uniform(-0.3, 0.3), rng.uniform(-0.3, 0.3)),
+                    length=rng.uniform(*CABLE_LENGTH),
+                    tilt=rng.uniform(-12, 12),
+                )
+                for _ in range(rng.randint(0, MAX_CABLES))
+            )
+            holes.append(CeilingHole((row, col), cables))
+    return holes

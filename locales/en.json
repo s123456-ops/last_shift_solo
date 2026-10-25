@@ -84,5 +84,18 @@
   "retro.on": "on",
   "retro.off": "off",
   "door.open_prompt": "Open the door",
-  "door.close_prompt": "Close the door"
+  "door.close_prompt": "Close the door",
+  "sign.guard_post": "GUARD POST",
+  "sign.hall": "RECEPTION HALL",
+  "sign.storeroom": "STOREROOM",
+  "sign.office": "DR SAUNIER'S OFFICE",
+  "sign.cell_3": "CELL 3",
+  "sign.maintenance": "MAINTENANCE",
+  "sign.break_room": "BREAK ROOM",
+  "sign.infirmary": "INFIRMARY",
+  "sign.laboratory": "LABORATORY C",
+  "sign.locker_room": "LOCKER ROOM",
+  "sign.archives": "ARCHIVES",
+  "sign.loading_dock": "LOADING DOCK",
+  "sign.exit_right": "EXIT"
 }
