@@ -11,6 +11,7 @@ STAMINA_POSITION = (-0.82, -0.36)
 LOW_BATTERY = 0.2
 
 OBJECTIVE_POSITION = (-0.85, 0.46)
+MAP_HINT_POSITION = (0.85, -0.45)
 PROMPT_POSITION = (0, -0.3)
 MESSAGE_POSITION = (0, -0.12)
 MESSAGE_MIN_DURATION = 2.5  # secondes
@@ -75,6 +76,14 @@ class Hud:
             scale=0.9,
             color=color.light_gray,
         )
+        Text(
+            tr("hud.map_hint"),
+            parent=camera.ui,
+            origin=(0.5, 0),
+            position=MAP_HINT_POSITION,
+            scale=0.8,
+            color=color.light_gray,
+        )
         self._hiding_bars = [
             Entity(
                 parent=camera.ui,
@@ -98,26 +107,6 @@ class Hud:
         self._reading_panel.alpha = 0.9
         self._reading_text = Text(
             "", parent=camera.ui, origin=(0, 0), y=0.03, enabled=False
-        )
-        self._pause_panel = Entity(
-            parent=camera.ui,
-            model="quad",
-            color=color.black,
-            scale=(2, 1),
-            z=0.2,
-            enabled=False,
-        )
-        self._pause_panel.alpha = 0.75
-        self._pause_title = Text(
-            tr("pause.title"), parent=camera.ui, origin=(0, 0), scale=2, enabled=False
-        )
-        self._pause_hint = Text(
-            tr("pause.hint"),
-            parent=camera.ui,
-            origin=(0, 0),
-            y=-0.1,
-            color=color.light_gray,
-            enabled=False,
         )
         self._reading_hint = Text(
             tr("hud.close"),
@@ -172,12 +161,6 @@ class Hud:
     def close_document(self) -> None:
         for element in (self._reading_panel, self._reading_text, self._reading_hint):
             element.enabled = False
-
-    def show_pause(self, paused: bool) -> None:
-        """Assombrit l'écran et affiche les touches pour reprendre ou quitter."""
-        self.show_prompt(None)
-        for element in (self._pause_panel, self._pause_title, self._pause_hint):
-            element.enabled = paused
 
     def show_end(self, text: str, won: bool) -> None:
         self.show_prompt(None)

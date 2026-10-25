@@ -11,6 +11,7 @@ import sys
 from ursina import Entity, Ursina, Vec2, application, color, held_keys, time, window
 from ursina.prefabs.first_person_controller import FirstPersonController
 
+from core.difficulty import DIFFICULTIES, NORMAL, Difficulty
 from core.documents import DocumentFormatError, load_documents
 from core.doors import MapWithDoors
 from core.facility import Facility
@@ -31,23 +32,24 @@ from core.monster import Monster
 from core.player import Player
 from core.session import GameSession, GameStatus
 from core.stamina import Stamina
-from core.texts import SUPPORTED_LANGUAGES, set_language, tr
+from core.texts import SUPPORTED_LANGUAGES, current_language, set_language, tr
 from view.coords import cell_to_world, world_to_cell
-from view.game_audio import AudioState, GameAudio
+from view.game_audio import AudioState, GameAudio, set_master_volume
 from view.hud import Hud
 from view.level_renderer import WALL_HEIGHT, LevelRenderer
 from view.lighting import Lighting
+from view.map_screen import MapScreen
 from view.monster_view import MonsterView
+from view.pause_menu import PauseMenu
 from view.screens import IntroSequence, TitleScreen
+from view.settings import PlayerSettings, Setting, default_settings
 from view.title_backdrop import TitleBackdrop
 
 GAME_LANGUAGE = "en"
 LEVEL_PATH = "levels/level1.txt"
 DOCUMENTS_PATH = "levels/level1_documents.{language}.txt"
-MOUSE_SENSITIVITY = Vec2(25, 25)
 
 FLASHLIGHT_CAPACITY = 100
-FLASHLIGHT_DRAIN_PER_SECOND = 2  # batterie pleine = 50 secondes d'éclairage
 BATTERY_CHARGE = 40  # une pile recharge 40 % de la batterie
 
 WALK_SPEED = 3
@@ -56,9 +58,6 @@ STAMINA_CAPACITY = 100
 STAMINA_DRAIN_PER_SECOND = 25  # 4 secondes de course à fond
 STAMINA_REGEN_PER_SECOND = 12  # environ 8 secondes pour se recharger
 
-MONSTER_PATROL_SPEED = 2  # il rôde, plus lent que votre marche
-MONSTER_CHASE_SPEED = 4  # il fonce : seule la course permet de le distancer
-MONSTER_GRACE_PERIOD = 20  # secondes avant qu'il ne commence à bouger
 CATCH_DISTANCE = 0.9
 START_INPUT_GRACE = 0.5  # secondes : la touche qui a fermé l'intro est ignorée
 MONSTER_PATROL = [
@@ -91,6 +90,9 @@ class GameController(Entity):
         renderer: LevelRenderer,
         lighting: Lighting,
         hud: Hud,
+        map_screen: MapScreen,
+        settings: PlayerSettings,
+        difficulty: Difficulty,
     ) -> None:
         super().__init__()
         self._session = session
@@ -100,9 +102,14 @@ class GameController(Entity):
         self._renderer = renderer
         self._lighting = lighting
         self._hud = hud
+        self._map = map_screen
+        self._difficulty = difficulty
         self._position_before_hiding = first_person.position
         self._end_shown = False
         self._paused = False
+        self._pause_menu = PauseMenu(
+            settings, on_resume=self._toggle_pause, on_quit=application.quit
+        )
         self._input_grace = START_INPUT_GRACE
 
     def input(self, key: str) -> None:
@@ -122,20 +129,26 @@ class GameController(Entity):
             if key in ("e", "escape"):
                 self._close_document()
             return
+        if self._map.is_open:
+            if key in ("m", "escape"):
+                self._toggle_map()
+            return
         if key == "escape":
             self._toggle_pause()
         elif key == "f":
             self._toggle_flashlight()
         elif key == "e":
             self._interact()
+        elif key == "m":
+            self._toggle_map()
 
     def update(self) -> None:
         self._input_grace = max(0.0, self._input_grace - time.dt)
         if self._session.is_over:
             self._show_end_once()
             return
-        if self._paused or self._hud.is_reading:
-            return  # la pause et la lecture figent le jeu
+        if self._paused or self._hud.is_reading or self._map.is_open:
+            return  # la pause, la lecture et le plan figent le jeu
         is_moving = (
             self._first_person.enabled and self._first_person.direction.length() > 0
         )
@@ -147,10 +160,21 @@ class GameController(Entity):
     def _toggle_pause(self) -> None:
         """Fige la partie ; le contrôleur du joueur libère ou capture la souris."""
         self._paused = not self._paused
+        self._map.close()
         self._first_person.enabled = (
             not self._paused and not self._session.player.is_hidden
         )
-        self._hud.show_pause(self._paused)
+        self._hud.show_prompt(None)
+        self._pause_menu.show(self._paused)
+
+    def _toggle_map(self) -> None:
+        """Ouvre ou ferme le plan. Le jeu est figé tant qu'il est ouvert."""
+        self._map.toggle()
+        if self._map.is_open:
+            self._map.show_player(self._first_person.position)
+        self._first_person.enabled = (
+            not self._map.is_open and not self._session.player.is_hidden
+        )
 
     def _player_cell(self):
         return world_to_cell(self._first_person.position)
@@ -191,6 +215,7 @@ class GameController(Entity):
             self._apply_hiding(result.item.cell)
 
     def _open_document(self, text: str) -> None:
+        self._map.close()
         self._first_person.enabled = False  # on ne bouge plus pendant la lecture
         self._hud.show_document(text)
 
@@ -219,9 +244,9 @@ class GameController(Entity):
             if next_cell is not None:
                 self._monster_view.move_to(next_cell)
                 self._monster_view.set_speed(
-                    MONSTER_CHASE_SPEED
+                    self._difficulty.monster_chase_speed
                     if self._session.monster_is_chasing
-                    else MONSTER_PATROL_SPEED
+                    else self._difficulty.monster_patrol_speed
                 )
         self._monster_view.advance(time.dt)
         if self._monster_distance() < CATCH_DISTANCE:
@@ -248,6 +273,7 @@ class GameController(Entity):
         if self._end_shown:
             return
         self._end_shown = True
+        self._map.close()
         self._first_person.enabled = False
         won = self._session.status is GameStatus.WON
         if won:
@@ -257,7 +283,9 @@ class GameController(Entity):
         self._hud.show_end(tr("end.won") if won else tr("end.lost"), won)
 
 
-def build_session(level, language: str, peaceful: bool) -> GameSession:
+def build_session(
+    level, language: str, peaceful: bool, difficulty: Difficulty
+) -> GameSession:
     """Assemble le noyau : joueur, monstre, bâtiment et objets du niveau."""
     facility = Facility()
     documents = load_documents(DOCUMENTS_PATH.format(language=language), level)
@@ -299,16 +327,21 @@ def build_session(level, language: str, peaceful: bool) -> GameSession:
             )
         )
     player = Player(
-        Flashlight(FLASHLIGHT_CAPACITY, FLASHLIGHT_DRAIN_PER_SECOND),
+        Flashlight(FLASHLIGHT_CAPACITY, difficulty.flashlight_drain),
         Stamina(STAMINA_CAPACITY, STAMINA_DRAIN_PER_SECOND, STAMINA_REGEN_PER_SECOND),
     )
-    monster = Monster(MapWithDoors(level, doors), level.monster_start, MONSTER_PATROL)
+    monster = Monster(
+        MapWithDoors(level, doors),
+        level.monster_start,
+        MONSTER_PATROL,
+        hearing_range=difficulty.monster_hearing,
+    )
     return GameSession(
         player,
         monster,
         Interactions(items),
         facility,
-        grace_period=MONSTER_GRACE_PERIOD,
+        grace_period=difficulty.grace_period,
         peaceful=peaceful,
     )
 
@@ -325,12 +358,24 @@ def build_world(level) -> tuple[LevelRenderer, Lighting]:
 
 
 def start_game(
-    app, level, session: GameSession, renderer: LevelRenderer, lighting: Lighting
+    app,
+    level,
+    session: GameSession,
+    renderer: LevelRenderer,
+    lighting: Lighting,
+    settings: PlayerSettings,
+    difficulty: Difficulty,
 ) -> None:
     """Place le joueur et le monstre, puis lance la partie."""
     first_person = FirstPersonController(position=cell_to_world(level.player_start))
-    first_person.mouse_sensitivity = MOUSE_SENSITIVITY
-    monster_view = MonsterView(app, level.monster_start, MONSTER_PATROL_SPEED)
+
+    def apply_sensitivity(value: float) -> None:
+        first_person.mouse_sensitivity = Vec2(value, value)
+
+    settings.sensitivity.bind(apply_sensitivity)
+    monster_view = MonsterView(
+        app, level.monster_start, difficulty.monster_patrol_speed
+    )
     GameController(
         session,
         first_person,
@@ -339,6 +384,9 @@ def start_game(
         renderer,
         lighting,
         Hud(),
+        MapScreen(level, difficulty),
+        settings,
+        difficulty,
     )
 
 
@@ -350,21 +398,17 @@ def parse_arguments() -> argparse.Namespace:
         default=GAME_LANGUAGE,
         help=f"langue du jeu (par défaut : {GAME_LANGUAGE})",
     )
-    parser.add_argument(
-        "--peaceful",
-        action="store_true",
-        help="mode paisible : le monstre ne bouge pas (pour tester la carte)",
-    )
     return parser.parse_args()
 
 
 def main() -> None:
-    arguments = parse_arguments()
-    language = arguments.lang
+    language = parse_arguments().lang
     try:
         set_language(language)
         level = load_level(LEVEL_PATH)
-        session = build_session(level, language, arguments.peaceful)
+        # on assemble une première partie pour vérifier les fichiers
+        # avant d'ouvrir la fenêtre ; la vraie est créée après le choix du mode
+        build_session(level, language, peaceful=False, difficulty=NORMAL)
     except (
         FileNotFoundError,
         LevelFormatError,
@@ -376,17 +420,29 @@ def main() -> None:
     app = Ursina()
     window.color = color.black
     renderer, lighting = build_world(level)
+    settings = default_settings()
+    settings.brightness.bind(lighting.set_brightness)
+    settings.volume.bind(lambda volume: set_master_volume(app, volume))
+    difficulty = Setting(
+        "options.difficulty",
+        tuple((choice.name_key, choice) for choice in DIFFICULTIES),
+        default=DIFFICULTIES.index(NORMAL),
+    )
     backdrop = TitleBackdrop(
         app, TITLE_CAMERA_START, TITLE_CAMERA_END, TITLE_SILHOUETTE
     )
 
-    def begin() -> None:
+    def begin(peaceful: bool) -> None:
         backdrop.stop()
+        chosen = difficulty.value
+        session = build_session(level, current_language(), peaceful, chosen)
         IntroSequence(
-            on_finish=lambda: start_game(app, level, session, renderer, lighting)
+            on_finish=lambda: start_game(
+                app, level, session, renderer, lighting, settings, chosen
+            )
         )
 
-    TitleScreen(on_start=begin)
+    TitleScreen(on_start=begin, brightness=settings.brightness, difficulty=difficulty)
     app.run()
 
 

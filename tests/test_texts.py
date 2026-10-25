@@ -30,7 +30,7 @@ def test_translations_keep_the_same_placeholders():
 
 def test_switching_to_english():
     set_language("en")
-    assert tr("title.start") == "Start"
+    assert tr("title.quit") == "Quit"
 
 
 def test_values_are_inserted():
@@ -46,3 +46,11 @@ def test_unknown_language_raises():
 def test_missing_key_raises_a_clear_error():
     with pytest.raises(KeyError, match="nope"):
         tr("nope")
+
+
+def test_every_language_names_itself_for_the_title_screen():
+    names = set()
+    for language in SUPPORTED_LANGUAGES:
+        set_language(language)
+        names.add(tr("language.name"))
+    assert len(names) == len(SUPPORTED_LANGUAGES)  # deux langues, deux noms
