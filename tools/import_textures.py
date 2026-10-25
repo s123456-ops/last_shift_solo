@@ -1,10 +1,10 @@
-"""Prépare les textures des objets à partir des images de assets/textures/source/.
+"""Prepares the object textures from the images in assets/textures/source/.
 
-Usage :
+Usage:
     python -m tools.import_textures
 
-Pour chaque image : on retire le fond uni autour de l'objet, puis on réduit
-à la résolution d'un jeu PS1. Les originaux restent intacts dans source/.
+For each image: the plain background around the object is removed, then the
+image is shrunk to the resolution of a PS1 game. Originals stay untouched in source/.
 """
 
 from pathlib import Path
@@ -13,10 +13,12 @@ from PIL import Image, ImageChops
 
 TEXTURES = Path(__file__).resolve().parent.parent / "assets" / "textures"
 SOURCE = TEXTURES / "source"
-BACKGROUND_TOLERANCE = 24  # écart de couleur au-delà duquel un pixel n'est plus le fond
-MARGIN = 2  # pixels gardés autour de l'objet, pour ne pas rogner ses bords
+BACKGROUND_TOLERANCE = (
+    24  # colour difference beyond which a pixel is no longer background
+)
+MARGIN = 2  # pixels kept around the object, so its edges are not cut
 
-# nom de l'image source → (nom de la texture du jeu, taille finale en pixels)
+# source image name -> (game texture name, final size in pixels)
 OBJECT_TEXTURES = {
     "door": ("door", (64, 144)),
     "security_door": ("security_door", (64, 144)),
@@ -30,13 +32,13 @@ OBJECT_TEXTURES = {
 
 
 def crop_to_object(image: Image.Image) -> Image.Image:
-    """Recadre sur l'objet : le fond est la couleur du coin en haut à gauche."""
+    """Crops to the object: the background is the colour of the top-left corner."""
     background = Image.new("RGB", image.size, image.getpixel((0, 0)))
     difference = ImageChops.difference(image, background).convert("L")
     mask = difference.point(lambda value: 255 if value > BACKGROUND_TOLERANCE else 0)
     box = mask.getbbox()
     if box is None:
-        raise ValueError("Aucun objet trouvé : l'image n'est faite que de fond.")
+        raise ValueError("No object found: the image is only background.")
     left, top, right, bottom = box
     return image.crop(
         (
@@ -50,18 +52,18 @@ def crop_to_object(image: Image.Image) -> Image.Image:
 
 def prepare(source: Path, size: tuple[int, int]) -> Image.Image:
     image = Image.open(source).convert("RGB")
-    return crop_to_object(image).resize(size, Image.BOX)  # BOX : moyenne, sans flou
+    return crop_to_object(image).resize(size, Image.BOX)  # BOX: average, no blur
 
 
 def main() -> None:
     for source_name, (texture_name, size) in OBJECT_TEXTURES.items():
         matches = sorted(SOURCE.glob(f"{source_name}.*"))
         if not matches:
-            print(f"Image manquante, ignorée : {source_name}")
+            print(f"Missing image, skipped: {source_name}")
             continue
         destination = TEXTURES / f"{texture_name}.png"
         prepare(matches[0], size).save(destination)
-        print(f"Texture créée : {destination.name} {size}")
+        print(f"Texture created: {destination.name} {size}")
 
 
 if __name__ == "__main__":

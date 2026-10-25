@@ -1,6 +1,6 @@
-"""Partie en cours : rassemble les règles et décide de la victoire ou de la défaite.
+"""Game in progress: gathers the rules and decides victory or defeat.
 
-Module indépendant du moteur de jeu.
+Engine-independent module.
 """
 
 from collections.abc import Sequence
@@ -23,14 +23,14 @@ class GameStatus(Enum):
 
 @dataclass(frozen=True)
 class InteractionResult:
-    """Ce qui s'est passé quand le joueur a appuyé sur E."""
+    """What happened when the player pressed E."""
 
     item: Interactable
     message: str
 
 
 class GameSession:
-    """Le chef d'orchestre des règles. La vue l'interroge, mais ne décide jamais."""
+    """The conductor of the rules. The view queries it, but never decides."""
 
     def __init__(
         self,
@@ -84,7 +84,7 @@ class GameSession:
 
     @property
     def doors(self) -> tuple[Door, ...]:
-        """Les portes normales, pour que la vue les affiche ouvertes ou fermées."""
+        """The regular doors, so the view can show them open or closed."""
         return self._doors
 
     @property
@@ -118,7 +118,7 @@ class GameSession:
         return InteractionResult(item, message)
 
     def next_monster_cell(self, player_cell: Cell) -> Cell | None:
-        """La prochaine case du monstre, ou None s'il ne doit pas encore bouger."""
+        """The monster's next cell, or None if it must not move yet."""
         if self.is_over or not self.monster_is_active:
             return None
         situation = Situation(
@@ -133,12 +133,12 @@ class GameSession:
         return cell
 
     def _force_door(self, cell: Cell) -> None:
-        """En difficile, le monstre ouvre la porte fermée qu'il s'apprête à franchir."""
+        """In hard mode, the monster opens the closed door it is about to cross."""
         for door in self._doors:
             if door.cell == cell and door.is_closed:
                 door.open()
 
     def report_caught(self) -> None:
-        """La vue a détecté le contact ; c'est la session qui décide de la défaite."""
+        """The view detected the contact; the session decides that the game is lost."""
         if not self.is_over:
             self._status = GameStatus.LOST

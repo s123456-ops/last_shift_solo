@@ -1,8 +1,8 @@
-"""THE LAST SHIFT, version solo : point d'entrée du jeu.
+"""THE LAST SHIFT, solo version: game entry point.
 
-Usage :
-    python main.py              (anglais, par défaut)
-    python main.py --lang fr    (français)
+Usage:
+    python main.py              (English, default)
+    python main.py --lang fr    (French)
 """
 
 import argparse
@@ -58,18 +58,18 @@ SIGNS_PATH = "levels/level1_signs.txt"
 PROPS_PATH = "levels/level1_props.txt"
 
 FLASHLIGHT_CAPACITY = 100
-BATTERY_CHARGE = 40  # une pile recharge 40 % de la batterie
+BATTERY_CHARGE = 40  # a battery recharges 40 % of the flashlight
 
 WALK_SPEED = 3
 RUN_SPEED = 6
 STAMINA_CAPACITY = 100
-STAMINA_DRAIN_PER_SECOND = 25  # 4 secondes de course à fond
-STAMINA_REGEN_PER_SECOND = 12  # environ 8 secondes pour se recharger
+STAMINA_DRAIN_PER_SECOND = 25  # 4 seconds of full sprint
+STAMINA_REGEN_PER_SECOND = 12  # about 8 seconds to recover
 
 CATCH_DISTANCE = 0.9
-START_INPUT_GRACE = 0.5  # secondes : la touche qui a fermé l'intro est ignorée
+START_INPUT_GRACE = 0.5  # seconds: the key that closed the intro is ignored
 MONSTER_PATROL = [
-    (14, 26),  # sa salle de départ
+    (14, 26),  # its starting room
     (7, 22),
     (8, 40),  # couloir de l'aile C
     (13, 37),  # laboratoire
@@ -79,15 +79,15 @@ MONSTER_PATROL = [
     (7, 8),
     (2, 15),
 ]
-CODE_END_DOCUMENT = (15, 28)  # le journal de Daniel Morel donne le dernier chiffre
+CODE_END_DOCUMENT = (15, 28)  # Daniel Morel's journal gives the last digit
 
-TITLE_CAMERA_START = (7, 2)  # début du couloir principal, à l'ouest
-TITLE_CAMERA_END = (7, 18)  # la caméra s'arrête avant d'atteindre la silhouette
-TITLE_SILHOUETTE = (7, 27)  # le monstre, au fond, près d'une lumière de secours
+TITLE_CAMERA_START = (7, 2)  # start of the main corridor, to the west
+TITLE_CAMERA_END = (7, 18)  # the camera stops before reaching the silhouette
+TITLE_SILHOUETTE = (7, 27)  # the monster, at the far end, near an emergency light
 
 
 class GameController(Entity):
-    """Traduit les touches en actions pour la session, et son état en image et en son."""
+    """Turns key presses into actions for the session, and its state into images and sound."""
 
     def __init__(
         self,
@@ -161,7 +161,7 @@ class GameController(Entity):
             self._show_end_once()
             return
         if self._paused or self._hud.is_reading or self._map.is_open:
-            return  # la pause, la lecture et le plan figent le jeu
+            return  # pause, reading and the map freeze the game
         is_moving = (
             self._first_person.enabled and self._first_person.direction.length() > 0
         )
@@ -169,13 +169,13 @@ class GameController(Entity):
         self._refresh_player_view()
         self._move_head(is_moving)
         for _ in self._renderer.sync_doors(self._session.doors):
-            self._audio.on_locker()  # grincement métallique d'une porte qui bouge
+            self._audio.on_locker()  # metallic creak of a moving door
         self._update_monster()
         self._update_audio(is_moving)
         self._music.set_mood("chase" if self._session.monster_is_chasing else "game")
 
     def _move_head(self, is_moving: bool) -> None:
-        """Balancement de la tête en marchant, lampe qui tremble à bout de souffle."""
+        """Head bob while walking, flashlight shaking when out of breath."""
         stamina = self._session.player.stamina
         vertical, sideways = self._head_bob.update(
             time.dt, is_moving, stamina.is_running
@@ -185,7 +185,7 @@ class GameController(Entity):
         self._lighting.set_trembling(stamina.is_exhausted)
 
     def _toggle_pause(self) -> None:
-        """Fige la partie ; le contrôleur du joueur libère ou capture la souris."""
+        """Freezes the game; the player controller releases or captures the mouse."""
         self._paused = not self._paused
         self._map.close()
         self._first_person.enabled = (
@@ -195,7 +195,7 @@ class GameController(Entity):
         self._pause_menu.show(self._paused)
 
     def _toggle_map(self) -> None:
-        """Ouvre ou ferme le plan. Le jeu est figé tant qu'il est ouvert."""
+        """Opens or closes the map. The game is frozen while it is open."""
         self._map.toggle()
         if self._map.is_open:
             self._map.show_player(self._first_person.position)
@@ -243,7 +243,7 @@ class GameController(Entity):
 
     def _open_document(self, text: str) -> None:
         self._map.close()
-        self._first_person.enabled = False  # on ne bouge plus pendant la lecture
+        self._first_person.enabled = False  # the player cannot move while reading
         self._hud.show_document(text)
 
     def _close_document(self) -> None:
@@ -251,7 +251,7 @@ class GameController(Entity):
         self._first_person.enabled = not self._session.player.is_hidden
 
     def _apply_hiding(self, cell) -> None:
-        """Place la caméra dans le casier, ou la ressort là où le joueur est entré."""
+        """Puts the camera inside the locker, or back where the player got in."""
         hidden = self._session.player.is_hidden
         if hidden:
             self._position_before_hiding = self._first_person.position
@@ -314,7 +314,7 @@ class GameController(Entity):
 def build_session(
     level, language: str, peaceful: bool, difficulty: Difficulty, props=()
 ) -> GameSession:
-    """Assemble le noyau : joueur, monstre, bâtiment et objets du niveau."""
+    """Assembles the core: player, monster, building and the level's objects."""
     facility = Facility()
     documents = load_documents(DOCUMENTS_PATH.format(language=language), level)
     security_doors = [LockedDoor(cell) for cell in level.security_door_cells]
@@ -334,7 +334,7 @@ def build_session(
     items += [HidingSpot(cell) for cell in level.hiding_spot_cells]
     if CODE_END_DOCUMENT not in documents:
         raise ValueError(
-            f"Aucun document en {CODE_END_DOCUMENT} : le code serait incomplet."
+            f"No document at {CODE_END_DOCUMENT}: the code would be incomplete."
         )
     items += [
         Note(
@@ -359,8 +359,8 @@ def build_session(
         Flashlight(FLASHLIGHT_CAPACITY, difficulty.flashlight_drain),
         Stamina(STAMINA_CAPACITY, STAMINA_DRAIN_PER_SECOND, STAMINA_REGEN_PER_SECOND),
     )
-    # Les portes de sécurité arrêtent toujours le monstre ; les portes normales,
-    # seulement s'il ne sait pas les ouvrir (facile et normal).
+    # Security doors always stop the monster; regular doors,
+    # only when it cannot open them (easy and normal).
     barriers = security_doors + ([] if difficulty.monster_opens_doors else doors)
     monster = Monster(
         MapWithDoors(MapWithFurniture(level, props), barriers),
@@ -381,7 +381,7 @@ def build_session(
 
 
 def build_world(app, level, signs, props) -> tuple[LevelRenderer, Lighting]:
-    """Le décor et l'éclairage, partagés par l'écran titre et la partie."""
+    """The scenery and lighting, shared by the title screen and the game."""
     renderer = LevelRenderer(level, app=app, signs=signs, props=props)
     renderer.build()
     lighting = Lighting()
@@ -401,7 +401,7 @@ def start_game(
     difficulty: Difficulty,
     music: Music,
 ) -> None:
-    """Place le joueur et le monstre, puis lance la partie."""
+    """Places the player and the monster, then starts the game."""
     first_person = FirstPersonController(position=cell_to_world(level.player_start))
 
     def apply_sensitivity(value: float) -> None:
@@ -432,7 +432,7 @@ def parse_arguments() -> argparse.Namespace:
         "--lang",
         choices=SUPPORTED_LANGUAGES,
         default=GAME_LANGUAGE,
-        help=f"langue du jeu (par défaut : {GAME_LANGUAGE})",
+        help=f"game language (default: {GAME_LANGUAGE})",
     )
     return parser.parse_args()
 
@@ -442,8 +442,8 @@ def main() -> None:
     try:
         set_language(language)
         level = load_level(LEVEL_PATH)
-        # on assemble une première partie pour vérifier les fichiers
-        # avant d'ouvrir la fenêtre ; la vraie est créée après le choix du mode
+        # a first game is assembled to check the files
+        # before opening the window; the real one is created once the mode is chosen
         signs = load_signs(SIGNS_PATH, level)
         props = load_props(PROPS_PATH, level)
         build_session(level, language, peaceful=False, difficulty=NORMAL, props=props)
@@ -455,7 +455,7 @@ def main() -> None:
         PropFormatError,
         ValueError,
     ) as error:
-        sys.exit(f"Impossible de préparer la partie : {error}")
+        sys.exit(f"Could not prepare the game: {error}")
 
     app = Ursina()
     window.color = color.black

@@ -1,4 +1,4 @@
-"""Chargement des modèles 3D, mise à l'échelle et réglages des modèles du jeu."""
+"""Loading 3D models, scaling them, and the settings of the game's models."""
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,15 +10,15 @@ from view.lighting import make_lit
 
 
 class ModelLoadError(Exception):
-    """Un fichier de modèle 3D est absent ou illisible."""
+    """A 3D model file is missing or unreadable."""
 
 
 @dataclass(frozen=True)
 class ModelSpec:
-    """Un modèle et ses réglages, trouvés avec tools/preview_model.py."""
+    """A model and its settings, found with tools/preview_model.py."""
 
     path: Path
-    height: float  # hauteur en mètres
+    height: float  # height in metres
     pitch: float = 0.0  # rotation R de l'outil
     heading: float = 0.0  # rotation T de l'outil
 
@@ -31,22 +31,20 @@ EXIT_DOOR = ModelSpec(Path("assets/models/exit_door.bam"), height=2.3, pitch=90)
 
 
 def load_model(app, path: Path) -> NodePath:
-    """Charge un fichier 3D avec le chargeur de Panda3D."""
+    """Loads a 3D file with the Panda3D loader."""
     if not path.is_file():
-        raise ModelLoadError(f"Modèle introuvable : {path}")
+        raise ModelLoadError(f"Model not found: {path}")
     try:
         node = app.loader.loadModel(Filename.fromOsSpecific(str(path.resolve())))
     except OSError as error:
-        raise ModelLoadError(
-            f"Impossible de charger le modèle {path} : {error}"
-        ) from error
+        raise ModelLoadError(f"Could not load the model {path}: {error}") from error
     if node is None:
-        raise ModelLoadError(f"Impossible de charger le modèle {path}.")
+        raise ModelLoadError(f"Could not load the model {path}.")
     return node
 
 
 def fit_to_height(node: NodePath, reference: NodePath, height: float) -> None:
-    """Met le modèle à la hauteur voulue, centré et posé sur le sol (y = 0 dans Ursina)."""
+    """Scales the model to the wanted height, centred and resting on the floor (y = 0 in Ursina)."""
     node.setPos(0, 0, 0)
     node.setScale(1)
     low, high = node.getTightBounds(reference)
@@ -60,7 +58,7 @@ def fit_to_height(node: NodePath, reference: NodePath, height: float) -> None:
 
 
 def place_model(app, spec: ModelSpec, holder: Entity) -> NodePath:
-    """Charge un modèle, lui applique ses réglages et l'attache à une entité."""
+    """Loads a model, applies its settings and attaches it to an entity."""
     node = load_model(app, spec.path)
     node.reparentTo(holder)
     node.setHpr(spec.heading, spec.pitch, 0)

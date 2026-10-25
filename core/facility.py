@@ -1,8 +1,8 @@
-"""État du bâtiment : le courant et la sortie. Module indépendant du moteur de jeu."""
+"""State of the building: power and exit. Engine-independent module."""
 
 
 class Facility:
-    """Partagé par le tableau électrique et la porte de sortie."""
+    """Shared by the generator and the exit door."""
 
     def __init__(self) -> None:
         self._power_on = False
@@ -21,7 +21,5 @@ class Facility:
 
     def reach_exit(self) -> None:
         if not self._power_on:
-            raise RuntimeError(
-                "La sortie est verrouillée tant que le courant n'est pas rétabli."
-            )
+            raise RuntimeError("The exit stays locked until the power is restored.")
         self._exit_reached = True

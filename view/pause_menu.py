@@ -1,4 +1,4 @@
-"""Le menu pause : reprendre, régler les options, quitter. Aucune règle du jeu ici."""
+"""The pause menu: resume, adjust the options, quit. No game rules here."""
 
 from collections.abc import Callable
 
@@ -14,7 +14,7 @@ BACKGROUND_OPACITY = 0.8
 
 
 class PauseMenu:
-    """Un écran assombri avec des boutons. Les réglages s'appliquent immédiatement."""
+    """A darkened screen with buttons. Settings apply immediately."""
 
     def __init__(
         self,

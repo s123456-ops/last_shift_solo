@@ -1,4 +1,4 @@
-"""Vérifie que le vrai niveau du jeu est jouable de bout en bout."""
+"""Checks that the real game level is playable from start to finish."""
 
 from core.doors import MapWithDoors
 from core.interactables import LockedDoor
@@ -11,7 +11,7 @@ FURNISHED = MapWithFurniture(LEVEL, load_props("levels/level1_props.txt", LEVEL)
 
 
 def test_every_object_is_reachable_once_the_doors_are_open():
-    pathfinder = Pathfinder(FURNISHED)  # les meubles bloquent, les portes non
+    pathfinder = Pathfinder(FURNISHED)  # furniture blocks, doors do not
     targets = [
         LEVEL.exit_cell,
         LEVEL.fuse_cell,
@@ -33,7 +33,7 @@ def test_keycard_is_reachable_without_opening_any_door():
 
 
 def test_small_items_rest_against_a_straight_wall():
-    """Piles, notes et documents sont posés sur un meuble collé au mur."""
+    """Batteries, notes and documents rest on furniture against a wall."""
     small_items = [
         LEVEL.fuse_cell,
         LEVEL.note_cell,

@@ -28,7 +28,7 @@ def test_walls_and_outside_of_map_are_blocking():
     assert level.is_wall((0, 0))
     assert level.is_wall((2, 2))
     assert not level.is_wall((1, 2))
-    assert not level.is_wall((1, 3))  # un objet n'est pas un mur
+    assert not level.is_wall((1, 3))  # an object is not a wall
     assert level.is_wall((-1, 0))
     assert level.is_wall((10, 10))
 
@@ -39,7 +39,7 @@ def test_empty_level_raises():
 
 
 def test_non_rectangular_level_raises():
-    with pytest.raises(LevelFormatError, match="ligne 2"):
+    with pytest.raises(LevelFormatError, match="Line 2"):
         parse_level("#####\n#P.E\n#.#M#\n#####")
 
 
@@ -63,7 +63,7 @@ def test_shipped_level_is_valid():
     assert not level.is_wall(level.player_start)
 
 
-"""dernier test vérifie que le vrai niveau du jeu est valide. Si un coéquipier casse la carte un jour, les tests le signaleront avant même de lancer le jeu."""
+"""The last test checks that the real game level is valid. If a teammate ever breaks the map, the tests will say so before the game is even launched."""
 
 
 def test_missing_fuse_raises():
@@ -120,11 +120,11 @@ def test_level_without_keycard_or_door_is_valid():
 
 def test_security_door_cell_is_not_a_wall_on_the_map():
     level = parse_level("#######\n#PFGE.#\n#K.NSM#\n#######")
-    assert not level.is_wall((2, 4))  # c'est MapWithDoors qui la ferme
+    assert not level.is_wall((2, 4))  # MapWithDoors is what closes it
 
 
 def test_door_without_keycard_raises():
-    with pytest.raises(LevelFormatError, match="carte d'accès"):
+    with pytest.raises(LevelFormatError, match="keycard"):
         parse_level("#######\n#PFGE.#\n#..NSM#\n#######")
 
 
@@ -135,12 +135,12 @@ def test_two_keycards_raise():
 
 def test_wall_side_finds_the_wall_next_to_a_cell():
     level = parse_level(SMALL_LEVEL)
-    assert level.wall_side((1, 1)) == (-1, 0)  # le mur du nord passe en premier
+    assert level.wall_side((1, 1)) == (-1, 0)  # the north wall comes first
 
 
 def test_wall_side_ignores_an_isolated_bit_of_wall():
     level = parse_level("#######\n#P...E#\n#..#..#\n#F.G.N#\n#..M..#\n#######")
-    assert level.wall_side((2, 2)) is None  # (2, 3) est un pan de mur isolé
+    assert level.wall_side((2, 2)) is None  # (2, 3) is an isolated bit of wall
 
 
 def test_wall_side_is_none_in_the_middle_of_a_room():
@@ -154,5 +154,5 @@ def test_door_cells_are_found():
 
 
 def test_door_outside_an_opening_raises():
-    with pytest.raises(LevelFormatError, match="entre deux murs"):
+    with pytest.raises(LevelFormatError, match="between two walls"):
         parse_level("#######\n#P.O.M#\n#EFG.N#\n#######")

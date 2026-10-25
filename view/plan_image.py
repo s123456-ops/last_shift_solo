@@ -1,6 +1,6 @@
-"""Image du plan du bâtiment, dessinée case par case à partir de la carte.
+"""Image of the building plan, drawn cell by cell from the map.
 
-N'importe pas Ursina : ce module se teste sans ouvrir de fenêtre.
+Does not import Ursina: this module is tested without opening a window.
 """
 
 from dataclasses import dataclass
@@ -20,7 +20,7 @@ KEYCARD_RGB = (60, 210, 230)
 
 @dataclass(frozen=True)
 class Landmark:
-    """Un lieu repéré sur le plan, avec sa légende et sa couleur."""
+    """A place marked on the plan, with its label and colour."""
 
     cell: Cell
     label_key: str
@@ -28,7 +28,7 @@ class Landmark:
 
 
 def landmarks(level: FacilityMap, show_keycard: bool = False) -> list[Landmark]:
-    """Les lieux utiles au joueur. Les piles n'y sont jamais ; la carte, en indice."""
+    """The places useful to the player. Batteries never appear; the keycard, as a hint."""
     marks = [
         Landmark(level.exit_cell, "map.exit", EXIT_RGB),
         Landmark(level.power_panel_cell, "map.panel", PANEL_RGB),
@@ -43,8 +43,8 @@ def landmarks(level: FacilityMap, show_keycard: bool = False) -> list[Landmark]:
 
 
 def draw_plan(level: FacilityMap) -> Image.Image:
-    """Un pixel par case : les murs en clair, le sol en sombre."""
+    """One pixel per cell: walls light, floor dark."""
     image = Image.new("RGBA", (level.width, level.height), (*FLOOR_RGB, 255))
     for row, col in level.wall_cells():
-        image.putpixel((col, row), (*WALL_RGB, 255))  # (x, y) = (colonne, ligne)
+        image.putpixel((col, row), (*WALL_RGB, 255))  # (x, y) = (column, row)
     return image

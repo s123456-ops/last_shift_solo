@@ -1,4 +1,4 @@
-"""Arrière-plan de l'écran titre : une lente avancée dans le couloir, une silhouette au bout."""
+"""Title screen backdrop: a slow walk down the corridor, a silhouette at the end."""
 
 import math
 
@@ -8,14 +8,14 @@ from core.level import Cell
 from view.coords import cell_to_world
 from view.model_loader import MONSTER, ModelLoadError, place_model
 
-EYE_HEIGHT = 1.6  # hauteur de la caméra, en mètres
-TRAVEL_DURATION = 45.0  # secondes pour parcourir le couloir, avant de recommencer
-SWAY_ANGLE = 1.5  # balancement de la tête, en degrés
+EYE_HEIGHT = 1.6  # camera height, in metres
+TRAVEL_DURATION = 45.0  # seconds to walk the corridor, before starting over
+SWAY_ANGLE = 1.5  # head sway, in degrees
 TILT_ANGLE = 0.8
 
 
 class TitleBackdrop(Entity):
-    """Fait avancer la caméra dans le décor du jeu pendant l'écran titre."""
+    """Moves the camera through the game scenery during the title screen."""
 
     def __init__(self, app, start: Cell, end: Cell, silhouette: Cell) -> None:
         super().__init__()
@@ -40,12 +40,12 @@ class TitleBackdrop(Entity):
         destroy(self)
 
     def _place_silhouette(self, app, cell: Cell) -> Entity:
-        """Le monstre, immobile au bout du couloir, tourné vers la caméra."""
+        """The monster, standing still at the end of the corridor, facing the camera."""
         holder = Entity(position=cell_to_world(cell))
         facing = self._start - holder.position
         holder.rotation_y = math.degrees(math.atan2(facing.x, facing.z)) + 180
         try:
             place_model(app, MONSTER, holder)
         except ModelLoadError:
-            pass  # sans modèle, le couloir reste vide : l'écran titre fonctionne quand même
+            pass  # without a model, the corridor stays empty: the title screen still works
         return holder

@@ -1,13 +1,13 @@
-"""Lampe torche du joueur : batterie, allumage, recharge.
+"""The player's flashlight: battery, switching on and off, recharging.
 
-Module indépendant du moteur de jeu.
+Engine-independent module.
 """
 
 from core.gauge import Gauge
 
 
 class Flashlight:
-    """Une lampe dont la batterie se vide quand elle est allumée."""
+    """A flashlight whose battery drains while it is on."""
 
     def __init__(self, capacity: float, drain_per_second: float) -> None:
         self._battery = Gauge(capacity)

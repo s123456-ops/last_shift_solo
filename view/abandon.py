@@ -1,7 +1,8 @@
-"""Où poser les traces d'abandon : murs abîmés et débris au sol.
+"""Where to put the traces of abandonment: damaged walls and floor debris.
 
-Tout est tiré au sort avec une graine fixe : le décor est identique à chaque partie,
-ce qui aide le joueur à se repérer. N'importe pas Ursina : se teste sans fenêtre.
+Everything is drawn at random with a fixed seed: the scenery is identical in
+every game, which helps the player find their way. Does not import Ursina:
+tested without a window.
 """
 
 import random
@@ -10,37 +11,35 @@ from dataclasses import dataclass
 from core.level import FLOOR, Cell, FacilityMap
 
 DECOR_SEED = 13
-WALL_VARIANTS = (  # (texture, poids) : la plupart des murs restent intacts
+WALL_VARIANTS = (  # (texture, weight): most walls stay intact
     ("wall_tiles", 70),
     ("wall_cracked", 12),
     ("wall_water", 9),
     ("wall_hole", 5),
     ("wall_claws", 4),
 )
-DEBRIS_DENSITY = 0.10  # part des cases de sol qui reçoivent un débris
-WALL_DEBRIS = "debris_rubble"  # les gravats tombent au pied des murs
+DEBRIS_DENSITY = 0.10  # share of floor cells that get debris
+WALL_DEBRIS = "debris_rubble"  # rubble falls at the foot of walls
 FLOOR_DEBRIS = ("debris_papers", "debris_stain", "debris_tiles")
-RUBBLE_CHANCE = 0.6  # contre un mur, le débris est le plus souvent des gravats
-CEILING_HOLE_DENSITY = 0.05  # part des cases de sol sous une dalle tombée
+RUBBLE_CHANCE = 0.6  # against a wall, debris is usually rubble
+CEILING_HOLE_DENSITY = 0.05  # share of floor cells under a fallen ceiling tile
 MAX_CABLES = 2
-CABLE_LENGTH = (0.4, 0.9)  # mètres : le bas des câbles reste au-dessus des têtes
+CABLE_LENGTH = (0.4, 0.9)  # metres: the bottom of the cables stays above head height
 
 
 @dataclass(frozen=True)
 class Debris:
-    """Un débris posé à plat sur le sol."""
+    """A piece of debris lying flat on the floor."""
 
     cell: Cell
     texture: str
-    angle: float  # rotation autour de la verticale, en degrés
-    size: float  # côté, en mètres
-    offset: tuple[
-        float, float
-    ]  # décalage dans la case (x, z), pour casser l'alignement
+    angle: float  # rotation around the vertical axis, in degrees
+    size: float  # side length, in metres
+    offset: tuple[float, float]  # offset inside the cell (x, z), to break the alignment
 
 
 def wall_textures(level: FacilityMap, seed: int = DECOR_SEED) -> dict[Cell, str]:
-    """La texture de chaque mur : normale, fissurée, humide, trouée ou griffée."""
+    """Each wall's texture: normal, cracked, damp, holed or clawed."""
     rng = random.Random(seed)
     names = [name for name, _ in WALL_VARIANTS]
     weights = [weight for _, weight in WALL_VARIANTS]
@@ -50,7 +49,7 @@ def wall_textures(level: FacilityMap, seed: int = DECOR_SEED) -> dict[Cell, str]
 def scatter_debris(
     level: FacilityMap, seed: int = DECOR_SEED, density: float = DEBRIS_DENSITY
 ) -> list[Debris]:
-    """Des débris sur les cases de sol libres (jamais sur un objet ou une porte)."""
+    """Debris on free floor cells (never on an object or a door)."""
     rng = random.Random(seed + 1)
     debris = []
     for row, line in enumerate(level.rows):
@@ -77,16 +76,16 @@ def scatter_debris(
 
 @dataclass(frozen=True)
 class Cable:
-    """Un câble qui pend d'un trou du plafond."""
+    """A cable hanging from a hole in the ceiling."""
 
     offset: tuple[float, float]
     length: float
-    tilt: float  # inclinaison, en degrés
+    tilt: float  # tilt, in degrees
 
 
 @dataclass(frozen=True)
 class CeilingHole:
-    """Une dalle de plafond tombée : un trou en haut, la dalle cassée au sol."""
+    """A fallen ceiling tile: a hole above, the broken tile on the floor."""
 
     cell: Cell
     cables: tuple[Cable, ...]
@@ -95,7 +94,7 @@ class CeilingHole:
 def ceiling_holes(
     level: FacilityMap, seed: int = DECOR_SEED, density: float = CEILING_HOLE_DENSITY
 ) -> list[CeilingHole]:
-    """Les dalles tombées, au-dessus de cases de sol libres."""
+    """The fallen tiles, above free floor cells."""
     rng = random.Random(seed + 2)
     holes = []
     for row, line in enumerate(level.rows):

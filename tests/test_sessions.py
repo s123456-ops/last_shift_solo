@@ -34,7 +34,7 @@ def make_session(**options):
     facility = Facility()
     interactions = Interactions(
         [
-            Pickup((4, 2), FUSE_ITEM, "Ramasser le fusible", "Fusible récupéré."),
+            Pickup((4, 2), FUSE_ITEM, "Pick up the fuse", "Fuse collected."),
             Note((4, 6), "Note", "Code : 4 7 1", grants=CODE_START),
             Note((4, 5), "Journal", "Dernier chiffre : 3", grants=CODE_END),
             PowerPanel((4, 3), facility),
@@ -82,11 +82,11 @@ def test_nothing_changes_once_the_game_is_over():
 
 def test_full_objective_sequence_wins_the_game():
     session = make_session()
-    session.interact((4, 2))  # fusible
-    session.interact((4, 6))  # note : début du code
-    session.interact((4, 5))  # journal : fin du code
-    session.interact((4, 3))  # tableau électrique
-    session.interact((4, 1))  # porte de sortie
+    session.interact((4, 2))  # fuse
+    session.interact((4, 6))  # note: start of the code
+    session.interact((4, 5))  # journal: end of the code
+    session.interact((4, 3))  # generator
+    session.interact((4, 1))  # exit door
     assert session.status is GameStatus.WON
 
 
@@ -99,18 +99,18 @@ def test_exit_without_power_does_not_win():
 def test_power_on_reflects_the_repaired_panel():
     session = make_session()
     assert not session.power_on
-    session.interact((4, 2))  # fusible
-    session.interact((4, 6))  # note : début du code
-    session.interact((4, 5))  # journal : fin du code
-    session.interact((4, 3))  # tableau
+    session.interact((4, 2))  # fuse
+    session.interact((4, 6))  # note: start of the code
+    session.interact((4, 5))  # journal: end of the code
+    session.interact((4, 3))  # generator
     assert session.power_on
 
 
 def test_half_of_the_code_does_not_restore_power():
     session = make_session()
-    session.interact((4, 2))  # fusible
-    session.interact((4, 6))  # note : début du code seulement
-    session.interact((4, 3))  # tableau
+    session.interact((4, 2))  # fuse
+    session.interact((4, 6))  # note: start of the code only
+    session.interact((4, 3))  # generator
     assert not session.power_on
 
 
@@ -148,7 +148,7 @@ def make_door_session(monster_opens_doors):
 def test_in_hard_mode_the_monster_opens_doors():
     session, door = make_door_session(monster_opens_doors=True)
     for _ in range(8):
-        session.next_monster_cell((1, 1))  # le joueur est de l'autre côté
+        session.next_monster_cell((1, 1))  # the player is on the other side
     assert not door.is_closed
 
 
@@ -157,4 +157,4 @@ def test_otherwise_a_closed_door_stops_the_monster():
     for _ in range(8):
         cell = session.next_monster_cell((1, 1))
     assert door.is_closed
-    assert cell[1] > 4  # il est resté de son côté de la porte
+    assert cell[1] > 4  # it stayed on its side of the door

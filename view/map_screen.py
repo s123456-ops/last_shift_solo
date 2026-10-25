@@ -1,4 +1,4 @@
-"""Le plan du bâtiment, ouvert avec la touche M. Ne contient aucune règle du jeu."""
+"""The building plan, opened with the M key. Contains no game rules."""
 
 from ursina import Entity, Text, Texture, Vec3, camera, color
 
@@ -8,16 +8,16 @@ from core.texts import tr
 from view.coords import world_to_grid
 from view.plan_image import draw_plan, landmarks
 
-PLAN_HEIGHT = 0.62  # hauteur du plan à l'écran (l'écran fait 1 de haut)
+PLAN_HEIGHT = 0.62  # height of the plan on screen (the screen is 1 high)
 PLAN_Y = 0.04
-MARKER_SIZE = 1.6  # taille d'un repère, en cases
+MARKER_SIZE = 1.6  # size of a landmark, in cells
 PLAYER_SIZE = 1.3
 LEGEND_SPACING = 0.27
 BACKGROUND_OPACITY = 0.88
 
 
 class MapScreen:
-    """Affiche le plan, ses repères, sa légende et la position du joueur."""
+    """Shows the plan, its landmarks, its legend and the player's position."""
 
     def __init__(self, level: FacilityMap, difficulty: Difficulty) -> None:
         self._level = level
@@ -37,7 +37,7 @@ class MapScreen:
             y=PLAN_Y,
             z=0.2,
         )
-        self._plan.texture.filtering = None  # pixels nets, pas de flou
+        self._plan.texture.filtering = None  # sharp pixels, no blur
         self._cell_size = PLAN_HEIGHT / level.height
         self._build_landmarks()
         self._player = Entity(
@@ -61,12 +61,12 @@ class MapScreen:
         self._root.enabled = False
 
     def show_player(self, position: Vec3) -> None:
-        """Place le point rouge là où se trouve le joueur, sans arrondir à la case."""
+        """Puts the red dot where the player stands, without rounding to the cell."""
         row, col = world_to_grid(position)
         self._player.x, self._player.y = self._to_screen(row, col)
 
     def _to_screen(self, row: float, col: float) -> tuple[float, float]:
-        """Ligne et colonne de la carte → position à l'écran, sur le plan."""
+        """Map row and column -> position on screen, over the plan."""
         x = self._plan.x + ((col + 0.5) / self._level.width - 0.5) * self._plan.scale_x
         y = self._plan.y + (0.5 - (row + 0.5) / self._level.height) * PLAN_HEIGHT
         return x, y

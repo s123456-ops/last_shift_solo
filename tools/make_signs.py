@@ -1,11 +1,11 @@
-"""Dessine les panneaux des murs, en français et en anglais, dans assets/textures/.
+"""Draws the wall signs, in French and English, into assets/textures/.
 
-Usage :
+Usage:
     python -m tools.make_signs
 
-Les textes viennent de locales/ (clés « sign.* ») : un panneau traduit dans le
-jeu l'est aussi sur le mur. Une image par panneau et par langue :
-sign_<nom>_<langue>.png.
+Texts come from locales/ ("sign.*" keys): a sign translated in the game is
+translated on the wall too. One image per sign and per language:
+sign_<name>_<language>.png.
 """
 
 import json
@@ -19,18 +19,18 @@ LOCALES = ROOT / "locales"
 OUTPUT = ROOT / "assets" / "textures"
 SIZE = (128, 32)
 SEED = 21
-ROOM_PLATE = ((214, 210, 196), (40, 52, 74))  # (fond émaillé, texte bleu nuit)
+ROOM_PLATE = ((214, 210, 196), (40, 52, 74))  # (enamel background, navy text)
 EXIT_PLATE = (
     (30, 140, 70),
     (236, 244, 236),
-)  # (vert de sortie de secours, texte blanc)
+)  # (emergency exit green, white text)
 EXIT_KEYS = {"sign.exit_right"}
 
 
 def fit_font(
     draw: ImageDraw.ImageDraw, text: str, max_width: int
 ) -> ImageFont.ImageFont:
-    """La plus grande police dans laquelle le texte tient sur la plaque."""
+    """The largest font in which the text fits on the plate."""
     for size in range(20, 7, -1):
         font = ImageFont.load_default(size=size)
         if draw.textlength(text, font=font) <= max_width:
@@ -43,11 +43,11 @@ def draw_sign(text: str, is_exit: bool, rng: random.Random) -> Image.Image:
     image = Image.new("RGB", SIZE, background)
     draw = ImageDraw.Draw(image)
     width, height = SIZE
-    draw.rectangle((1, 1, width - 2, height - 2), outline=ink)  # liseré
+    draw.rectangle((1, 1, width - 2, height - 2), outline=ink)  # border
     text_width = width - (34 if is_exit else 12)
     font = fit_font(draw, text, text_width)
     draw.text((6 + text_width / 2, height / 2), text, fill=ink, font=font, anchor="mm")
-    if is_exit:  # une flèche vers la droite
+    if is_exit:  # an arrow pointing right
         draw.polygon(
             [
                 (width - 26, 11),
@@ -61,7 +61,7 @@ def draw_sign(text: str, is_exit: bool, rng: random.Random) -> Image.Image:
             fill=ink,
         )
     pixels = image.load()
-    for _ in range(140):  # rouille et crasse sur l'émail
+    for _ in range(140):  # rust and grime on the enamel
         x, y = rng.randrange(width), rng.randrange(height)
         red, green, blue = pixels[x, y]
         pixels[x, y] = (
@@ -82,7 +82,7 @@ def main() -> None:
                 continue
             name = f"sign_{key.removeprefix('sign.')}_{language}"
             draw_sign(text, key in EXIT_KEYS, rng).save(OUTPUT / f"{name}.png")
-            print(f"Panneau créé : {name}.png")
+            print(f"Sign created: {name}.png")
 
 
 if __name__ == "__main__":

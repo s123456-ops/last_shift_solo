@@ -1,4 +1,4 @@
-"""Boîte à outils audio partagée : chargement, lecture, boucles et proximité."""
+"""Shared audio toolbox: loading, playing, loops and closeness."""
 
 import random
 from pathlib import Path
@@ -6,17 +6,17 @@ from pathlib import Path
 from panda3d.core import AudioSound, Filename
 
 SOUNDS_ROOT = Path("assets/sounds")
-HEARING_DISTANCE = 18.0  # au-delà, le monstre est considéré comme loin (en mètres)
+HEARING_DISTANCE = 18.0  # beyond this, the monster counts as far away (in metres)
 
 
 def closeness(distance: float) -> float:
-    """1 tout près, 0 au-delà de HEARING_DISTANCE, avec une montée douce."""
+    """1 when right there, 0 beyond HEARING_DISTANCE, with a smooth rise."""
     linear = max(0.0, 1.0 - distance / HEARING_DISTANCE)
     return linear * linear
 
 
 class SoundBank:
-    """Charge les sons depuis assets/sounds et les joue."""
+    """Loads sounds from assets/sounds and plays them."""
 
     def __init__(self, app, rng: random.Random | None = None) -> None:
         self._app = app
@@ -27,12 +27,12 @@ class SoundBank:
         return self._rng
 
     def load(self, folder: str, pattern: str) -> list[AudioSound]:
-        """Tous les fichiers d'un dossier qui correspondent au motif ; liste vide sinon."""
+        """Every file in a folder that matches the pattern; an empty list otherwise."""
         directory = SOUNDS_ROOT / folder
         paths = sorted(directory.glob(pattern))
         if not paths:
             print(
-                f"Avertissement : aucun son « {pattern} » dans {directory}. Le jeu continue sans."
+                f"Warning: no sound '{pattern}' in {directory}. The game goes on without it."
             )
         return [
             self._app.loader.loadSfx(Filename.fromOsSpecific(str(path.resolve())))
@@ -44,7 +44,7 @@ class SoundBank:
         return sounds[0] if sounds else None
 
     def play(self, sounds: list[AudioSound], volume: float) -> AudioSound | None:
-        """Joue un son choisi au hasard dans la liste."""
+        """Plays a sound picked at random from the list."""
         if not sounds or volume <= 0:
             return None
         sound = self._rng.choice(sounds)
@@ -58,7 +58,7 @@ class SoundBank:
 
 
 class LoopChannel:
-    """Un son en boucle permanente, dont le volume glisse doucement vers une cible."""
+    """A permanently looping sound whose volume slides smoothly towards a target."""
 
     def __init__(self, sound: AudioSound | None, fade_speed: float = 2.0) -> None:
         self._sound = sound

@@ -1,4 +1,4 @@
-"""Écrans hors partie : titre et introduction."""
+"""Screens outside the game: title and introduction."""
 
 from collections.abc import Callable
 
@@ -18,8 +18,8 @@ from core.texts import SUPPORTED_LANGUAGES, current_language, set_language, tr
 from view.settings import Setting
 
 INTRO_CARD_KEYS = ("intro.1", "intro.2", "intro.3", "intro.4")
-FADE_DURATION = 1.0  # secondes d'apparition et de disparition de chaque carton
-HOLD_DURATION = 3.0  # secondes où le carton reste pleinement affiché
+FADE_DURATION = 1.0  # seconds for each card to fade in and out
+HOLD_DURATION = 3.0  # seconds each card stays fully visible
 SKIP_KEYS = ("space", "enter")
 TITLE_BAND_OPACITY = 0.55
 MODE_BUTTON = (0.42, 0.07)
@@ -27,7 +27,7 @@ OPTION_BUTTON = (0.36, 0.06)
 
 
 class TitleScreen(Entity):
-    """Titre du jeu, par-dessus le décor : choix du mode, de la langue et de la luminosité."""
+    """Game title, over the scenery: choice of mode, language and brightness."""
 
     def __init__(
         self,
@@ -46,7 +46,7 @@ class TitleScreen(Entity):
         self._build()
 
     def _build(self) -> None:
-        """Crée tous les éléments ; rappelé après un changement de langue."""
+        """Creates every element; called again after a language change."""
         band = Entity(
             parent=self,
             model="quad",
@@ -114,11 +114,11 @@ class TitleScreen(Entity):
         index = SUPPORTED_LANGUAGES.index(current_language())
         set_language(SUPPORTED_LANGUAGES[(index + 1) % len(SUPPORTED_LANGUAGES)])
         if self._on_language is not None:
-            self._on_language()  # par exemple, les panneaux du décor
+            self._on_language()  # for example, the signs in the scenery
         self._rebuild()
 
     def _next_brightness(self) -> None:
-        self._brightness.next()  # le décor derrière le titre change tout de suite
+        self._brightness.next()  # the scenery behind the title changes right away
         self._rebuild()
 
     def _next_difficulty(self) -> None:
@@ -132,7 +132,7 @@ class TitleScreen(Entity):
 
 
 class IntroSequence(Entity):
-    """Les cartons de l'intro, en fondu sur fond noir, passables à tout moment."""
+    """The intro cards, fading on a black background, skippable at any time."""
 
     def __init__(self, on_finish: Callable[[], None]) -> None:
         super().__init__()
@@ -187,7 +187,7 @@ class IntroSequence(Entity):
         if self._finished:
             return
         self._finished = True
-        on_finish = self._on_finish  # on la garde avant de détruire l'objet
+        on_finish = self._on_finish  # kept before destroying the object
         for element in (self._background, self._card, self._hint):
             destroy(element)
         destroy(self)

@@ -1,20 +1,20 @@
-# Panneaux du niveau 1 : ligne colonne direction clé
-# (la case est un mur ; la direction est le côté où le panneau est vissé)
+# Level 1 signs: row column direction key
+# (the cell is a wall; the direction is the side the sign is screwed on)
 
-# Couloir principal, côté nord (les panneaux regardent vers le sud)
+# Main corridor, north side (signs face south)
 6 3 S sign.guard_post
 6 13 S sign.hall
 6 23 S sign.storeroom
 6 33 S sign.office
 6 40 S sign.cell_3
 
-# Couloir principal, côté sud (les panneaux regardent vers le nord)
+# Main corridor, south side (signs face north)
 9 3 N sign.maintenance
 9 13 N sign.break_room
 9 23 N sign.infirmary
 9 32 N sign.laboratory
 
-# Couloir de service
+# Service corridor
 19 6 N sign.locker_room
 19 21 N sign.archives
 19 35 N sign.loading_dock

@@ -1,11 +1,11 @@
-"""Génère les textures du bâtiment (style PS1, 64 pixels) dans assets/textures/.
+"""Generates the building textures (PS1 style, 64 pixels) in assets/textures/.
 
-Usage :
+Usage:
     python -m tools.make_textures
 
-Les textures sont dessinées par ce script, pixel par pixel : aucune image
-téléchargée, donc aucune licence à créditer. Le hasard est fixé (SEED) :
-relancer le script redonne exactement les mêmes images.
+The textures are drawn by this script, pixel by pixel: no downloaded image,
+so no licence to credit. Randomness is seeded (SEED): running the script
+again gives exactly the same images.
 """
 
 import math
@@ -16,20 +16,20 @@ from PIL import Image, ImageDraw, ImageFilter
 
 OUTPUT = Path(__file__).resolve().parent.parent / "assets" / "textures"
 SEED = 7
-SIZE = 64  # une case du jeu = 64 pixels de large
-WALL_HEIGHT_PIXELS = 192  # le mur fait 3 cases de haut
+SIZE = 64  # one game cell = 64 pixels wide
+WALL_HEIGHT_PIXELS = 192  # the wall is 3 cells high
 
 Color = tuple[int, int, int]
 
 
 def vary(rng: random.Random, base: Color, amount: int) -> Color:
-    """La même couleur, légèrement plus claire ou plus sombre."""
+    """The same colour, slightly lighter or darker."""
     shift = rng.randint(-amount, amount)
     return tuple(max(0, min(255, channel + shift)) for channel in base)
 
 
 def add_noise(image: Image.Image, rng: random.Random, amount: int) -> None:
-    """Un grain fin sur toute l'image, pour casser les aplats."""
+    """A fine grain over the whole image, to break up flat areas."""
     pixels = image.load()
     for x in range(image.width):
         for y in range(image.height):
@@ -37,7 +37,7 @@ def add_noise(image: Image.Image, rng: random.Random, amount: int) -> None:
 
 
 def add_stains(image: Image.Image, rng: random.Random, count: int, dark: Color) -> None:
-    """Des taches sombres et irrégulières : la saleté de six ans d'abandon."""
+    """Dark, irregular stains: the dirt of six years of neglect."""
     pixels = image.load()
     for _ in range(count):
         cx, cy = rng.randrange(image.width), rng.randrange(image.height)
@@ -47,8 +47,11 @@ def add_stains(image: Image.Image, rng: random.Random, count: int, dark: Color) 
                 distance = ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5
                 if distance > radius or rng.random() < 0.25:
                     continue
-                strength = 0.35 * (1 - distance / radius)  # plus pâle sur les bords
-                px, py = x % image.width, y % image.height  # la tache se raccorde
+                strength = 0.35 * (1 - distance / radius)  # fainter at the edges
+                px, py = (
+                    x % image.width,
+                    y % image.height,
+                )  # the stain wraps around the edges
                 pixels[px, py] = _blend(pixels[px, py], dark, strength)
 
 
@@ -64,22 +67,22 @@ def tiles(
     base: Color,
     grout: Color,
 ) -> None:
-    """Un carrelage : des carreaux de teinte variable, séparés par des joints."""
+    """Tiling: tiles of varying shade, separated by grout lines."""
     draw = ImageDraw.Draw(image)
     left, top, right, bottom = area
     for x in range(left, right, tile):
         for y in range(top, bottom, tile):
             draw.rectangle((x, y, x + tile - 1, y + tile - 1), fill=vary(rng, base, 10))
-            draw.line((x, y, x + tile - 1, y), fill=grout)  # joint du haut
+            draw.line((x, y, x + tile - 1, y), fill=grout)  # top grout line
             draw.line((x, y, x, y + tile - 1), fill=grout)  # joint de gauche
 
 
 def make_floor(rng: random.Random) -> Image.Image:
-    """Carrelage d'hôpital gris-blanc, 4 x 4 carreaux par case, quelques fissures."""
+    """Grey-white hospital tiles, 4 x 4 tiles per cell, a few cracks."""
     image = Image.new("RGB", (SIZE, SIZE))
     tiles(image, rng, (0, 0, SIZE, SIZE), 16, (176, 180, 172), (92, 94, 90))
     draw = ImageDraw.Draw(image)
-    for _ in range(1):  # une fissure discrète
+    for _ in range(1):  # a discreet crack
         x, y = rng.randrange(SIZE), rng.randrange(SIZE)
         for _ in range(8):
             nx, ny = x + rng.randint(-3, 3), y + rng.randint(1, 3)
@@ -91,10 +94,10 @@ def make_floor(rng: random.Random) -> Image.Image:
 
 
 def make_wall(rng: random.Random) -> Image.Image:
-    """Faïence verte en bas, peinture beige sale en haut, plinthe sombre au sol."""
+    """Green tiles at the bottom, dirty beige paint above, dark skirting board."""
     image = Image.new("RGB", (SIZE, WALL_HEIGHT_PIXELS))
     draw = ImageDraw.Draw(image)
-    tiles_top = WALL_HEIGHT_PIXELS - 80  # la faïence monte à environ 1,25 m
+    tiles_top = WALL_HEIGHT_PIXELS - 80  # the tiles go up to about 1.25 m
     draw.rectangle((0, 0, SIZE, tiles_top), fill=(170, 162, 140))  # peinture
     tiles(
         image,
@@ -104,19 +107,17 @@ def make_wall(rng: random.Random) -> Image.Image:
         (120, 150, 130),
         (70, 84, 74),
     )
-    draw.rectangle((0, tiles_top - 3, SIZE, tiles_top), fill=(80, 96, 86))  # liseré
+    draw.rectangle((0, tiles_top - 3, SIZE, tiles_top), fill=(80, 96, 86))  # border
     draw.rectangle(
         (0, WALL_HEIGHT_PIXELS - 6, SIZE, WALL_HEIGHT_PIXELS), fill=(48, 46, 42)
     )
-    for y in range(tiles_top - 3):  # crasse : plus sombre en haut et près de la faïence
+    for y in range(tiles_top - 3):  # grime: darker near the ceiling and near the tiles
         top_dirt = max(0.0, 0.35 - y / 120)
         low_dirt = max(0.0, 0.25 - (tiles_top - y) / 80)
         for x in range(SIZE):
             pixel = image.getpixel((x, y))
             image.putpixel((x, y), _blend(pixel, (70, 62, 46), top_dirt + low_dirt))
-    for _ in range(
-        4
-    ):  # coulures depuis le plafond, de longueur et d'intensité variables
+    for _ in range(4):  # drips from the ceiling, of varying length and strength
         x = rng.randrange(SIZE)
         length = rng.randint(15, 80)
         for y in range(length):
@@ -128,7 +129,7 @@ def make_wall(rng: random.Random) -> Image.Image:
 
 
 def make_ceiling(rng: random.Random) -> Image.Image:
-    """Dalles de faux plafond perforées, 2 x 2 par case, une tachée d'humidité."""
+    """Perforated drop-ceiling tiles, 2 x 2 per cell, one stained by damp."""
     image = Image.new("RGB", (SIZE, SIZE))
     tiles(image, rng, (0, 0, SIZE, SIZE), 32, (150, 148, 140), (70, 70, 66))
     for x in range(3, SIZE, 4):  # perforations
@@ -140,7 +141,7 @@ def make_ceiling(rng: random.Random) -> Image.Image:
     return image
 
 
-# --- Variantes de murs : le bâtiment abandonné depuis six ans -----------------
+# --- Wall variants: the building abandoned for six years ---------------------
 
 CRACK = (88, 80, 68)
 BRICK = (110, 66, 52)
@@ -150,7 +151,7 @@ MORTAR = (96, 90, 80)
 def _crack(
     draw: ImageDraw.ImageDraw, rng: random.Random, x: int, y: int, steps: int
 ) -> None:
-    """Une fissure qui descend en zigzag et se divise parfois en deux."""
+    """A crack zigzagging downwards, sometimes splitting in two."""
     for _ in range(steps):
         nx, ny = x + rng.randint(-4, 4), y + rng.randint(2, 6)
         draw.line((x, y, nx, ny), fill=CRACK, width=1)
@@ -160,7 +161,7 @@ def _crack(
 
 
 def make_wall_cracked(rng: random.Random) -> Image.Image:
-    """Le mur, traversé de fissures du plafond jusqu'à la faïence."""
+    """The wall, cracked from the ceiling down to the tiles."""
     image = make_wall(rng)
     draw = ImageDraw.Draw(image)
     for _ in range(2):
@@ -169,25 +170,25 @@ def make_wall_cracked(rng: random.Random) -> Image.Image:
 
 
 def make_wall_water(rng: random.Random) -> Image.Image:
-    """Une infiltration : grande coulure brune et peinture qui cloque."""
+    """A leak: a large brown streak and blistering paint."""
     image = make_wall(rng)
     pixels = image.load()
     center = rng.randint(20, SIZE - 20)
     for y in range(image.height - 10):
-        spread = 6 + y // 6  # la tache s'élargit en descendant
+        spread = 6 + y // 6  # the stain widens as it goes down
         for x in range(max(0, center - spread), min(SIZE, center + spread)):
             edge = abs(x - center) / spread
             pixels[x, y] = _blend(
                 pixels[x, y], (70, 66, 44), 0.6 * (1 - edge) * (1 - y / image.height)
             )
-    for _ in range(6):  # cloques de peinture, à peine plus claires que le mur
+    for _ in range(6):  # paint blisters, barely lighter than the wall
         x, y = rng.randrange(SIZE), rng.randrange(10, 100)
         ImageDraw.Draw(image).ellipse((x, y, x + 2, y + 1), fill=(182, 174, 150))
     return image
 
 
 def make_wall_hole(rng: random.Random) -> Image.Image:
-    """Un pan de plâtre arraché, qui laisse voir les briques derrière."""
+    """A patch of plaster torn off, showing the bricks behind."""
     image = make_wall(rng)
     bricks = Image.new("RGB", image.size, MORTAR)
     draw = ImageDraw.Draw(bricks)
@@ -199,7 +200,7 @@ def make_wall_hole(rng: random.Random) -> Image.Image:
     shape = ImageDraw.Draw(mask)
     cx, cy = rng.randint(22, SIZE - 22), rng.randint(40, 80)
     points = []
-    for step in range(12):  # contour irrégulier du trou
+    for step in range(12):  # irregular outline of the hole
         angle = step / 12 * 6.283
         radius = rng.randint(10, 18)
         points.append(
@@ -213,7 +214,7 @@ def make_wall_hole(rng: random.Random) -> Image.Image:
 
 
 def make_wall_claws(rng: random.Random) -> Image.Image:
-    """Quatre griffures parallèles, à hauteur d'homme. Personne n'en parle."""
+    """Four parallel claw marks, at head height. Nobody mentions them."""
     image = make_wall(rng)
     draw = ImageDraw.Draw(image)
     x0, y0 = rng.randint(12, 26), rng.randint(36, 60)
@@ -230,7 +231,7 @@ def make_wall_claws(rng: random.Random) -> Image.Image:
     return image
 
 
-# --- Débris au sol (images avec transparence) ----------------------------------
+# --- Floor debris (images with transparency) -----------------------------------
 
 
 def _transparent() -> Image.Image:
@@ -238,10 +239,10 @@ def _transparent() -> Image.Image:
 
 
 def make_rubble(rng: random.Random) -> Image.Image:
-    """Des gravats : morceaux de plâtre et de brique, dans un halo de poussière."""
+    """Rubble: bits of plaster and brick, in a halo of dust."""
     image = _transparent()
     draw = ImageDraw.Draw(image)
-    draw.ellipse((6, 10, SIZE - 6, SIZE - 8), fill=(120, 114, 100, 90))  # poussière
+    draw.ellipse((6, 10, SIZE - 6, SIZE - 8), fill=(120, 114, 100, 90))  # dust
     for _ in range(45):
         x, y = rng.randint(10, SIZE - 14), rng.randint(14, SIZE - 14)
         size = rng.randint(2, 6)
@@ -251,7 +252,7 @@ def make_rubble(rng: random.Random) -> Image.Image:
 
 
 def make_papers(rng: random.Random) -> Image.Image:
-    """Des feuilles éparpillées, jaunies, parfois piétinées."""
+    """Scattered sheets of paper, yellowed, sometimes trampled."""
     image = _transparent()
     for _ in range(4):
         sheet = Image.new("RGBA", (22, 28), (*vary(rng, (214, 206, 180), 10), 255))
@@ -266,7 +267,7 @@ def make_papers(rng: random.Random) -> Image.Image:
 
 
 def make_stain(rng: random.Random) -> Image.Image:
-    """Une tache sombre et irrégulière, d'origine inconnue."""
+    """A dark, irregular stain of unknown origin."""
     image = _transparent()
     pixels = image.load()
     blobs = [
@@ -284,7 +285,7 @@ def make_stain(rng: random.Random) -> Image.Image:
 
 
 def make_broken_tiles(rng: random.Random) -> Image.Image:
-    """Des éclats de carrelage, arrachés du sol."""
+    """Shards of floor tiles, torn from the floor."""
     image = _transparent()
     draw = ImageDraw.Draw(image)
     for _ in range(9):
@@ -299,17 +300,17 @@ def make_broken_tiles(rng: random.Random) -> Image.Image:
 
 
 def make_ceiling_hole(rng: random.Random) -> Image.Image:
-    """Une dalle manquante : du noir, quelques poutres devinées, des bords cassés."""
+    """A missing tile: darkness, a few beams you can make out, broken edges."""
     image = _transparent()
     draw = ImageDraw.Draw(image)
-    left, top = 16, 16  # la dalle manquante est centrée dans la case
+    left, top = 16, 16  # the missing tile is centred in the cell
     points = []
-    for step in range(16):  # bord irrégulier : la dalle a été arrachée
+    for step in range(16):  # irregular edge: the tile was torn out
         angle = step / 16 * 2 * math.pi
         radius = rng.uniform(17, 23)
         points.append((32 + radius * math.cos(angle), 32 + radius * math.sin(angle)))
     draw.polygon(points, fill=(10, 10, 12, 255))
-    for y in (left + 8, top + 24):  # poutres et gaines dans le noir
+    for y in (left + 8, top + 24):  # beams and ducts in the dark
         draw.line(
             (left - 2, y, left + 34, y + rng.randint(-2, 2)),
             fill=(34, 32, 30, 255),
@@ -320,7 +321,7 @@ def make_ceiling_hole(rng: random.Random) -> Image.Image:
 
 
 def make_fallen_tile(rng: random.Random) -> Image.Image:
-    """La dalle tombée au sol, cassée en morceaux."""
+    """The tile fallen on the floor, broken into pieces."""
     image = _transparent()
     for _ in range(3):
         piece = Image.new(
@@ -358,7 +359,7 @@ def main() -> None:
     for name, make in TEXTURES.items():
         path = OUTPUT / f"{name}.png"
         make(rng).save(path)
-        print(f"Texture créée : {path}")
+        print(f"Texture created: {path}")
 
 
 if __name__ == "__main__":

@@ -1,23 +1,23 @@
-"""Gouttes d'eau près des murs humides : le son confirme ce que l'image montre."""
+"""Water drips near damp walls: the sound confirms what the image shows."""
 
 from panda3d.core import AudioSound
 from ursina import Entity, Vec3, camera
 
 from view.sound_bank import SoundBank
 
-DRIP_RANGE = 9.0  # mètres : au-delà, on n'entend plus les gouttes
+DRIP_RANGE = 9.0  # metres: beyond that, drips can no longer be heard
 DRIP_VOLUME = 0.45
-DRIP_INTERVAL = (1.2, 3.5)  # secondes entre deux gouttes
+DRIP_INTERVAL = (1.2, 3.5)  # seconds between two drops
 
 
 class DripSounds:
-    """Fait tomber une goutte, de temps en temps, près d'un mur humide proche."""
+    """Every now and then, drops water near a damp wall close to the player."""
 
     def __init__(self, bank: SoundBank, audio3d, points: list[Vec3]) -> None:
         self._bank = bank
         self._points = points
-        self._sounds: list[AudioSound] = bank.load("ambiance", "goutte_*.wav")
-        self._emitter = Entity()  # l'endroit d'où part la goutte
+        self._sounds: list[AudioSound] = bank.load("ambiance", "drip_*.wav")
+        self._emitter = Entity()  # where the drop falls from
         for sound in self._sounds:
             audio3d.attachSoundToObject(sound, self._emitter)
         self._timer = bank.rng.uniform(*DRIP_INTERVAL)

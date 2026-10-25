@@ -1,4 +1,4 @@
-"""Le joueur : ce qu'il possède et où il se trouve. Module indépendant du moteur de jeu."""
+"""The player: what they own and where they are. Engine-independent module."""
 
 from core.flashlight import Flashlight
 from core.inventory import Inventory
@@ -7,7 +7,7 @@ from core.stamina import Stamina
 
 
 class Player:
-    """Regroupe la lampe et l'endurance du joueur, et sait s'il est caché."""
+    """Groups the player's flashlight and stamina, and knows whether they are hidden."""
 
     def __init__(
         self,
@@ -37,7 +37,7 @@ class Player:
         return self._hiding_spot is not None
 
     def hide(self, cell: Cell) -> None:
-        """Se cacher éteint la lampe : une lumière dans un casier vous trahirait."""
+        """Hiding switches the flashlight off: a light in a locker would give you away."""
         self._hiding_spot = cell
         if self._flashlight.is_on:
             self._flashlight.toggle()

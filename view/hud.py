@@ -1,4 +1,4 @@
-"""Interface affichée par-dessus le jeu. Ne contient aucune règle du jeu."""
+"""Interface shown on top of the game. Contains no game rules."""
 
 from ursina import Entity, Text, camera, color, destroy
 
@@ -14,13 +14,13 @@ OBJECTIVE_POSITION = (-0.85, 0.46)
 MAP_HINT_POSITION = (0.85, -0.45)
 PROMPT_POSITION = (0, -0.3)
 MESSAGE_POSITION = (0, -0.12)
-MESSAGE_MIN_DURATION = 2.5  # secondes
-READING_SPEED = 18  # caractères lus par seconde
-READING_WRAP = 45  # nombre de caractères par ligne dans l'écran de lecture
+MESSAGE_MIN_DURATION = 2.5  # seconds
+READING_SPEED = 18  # characters read per second
+READING_WRAP = 45  # characters per line in the reading screen
 
 
 class GaugeBar:
-    """Une barre horizontale avec son titre, ancrée à l'écran."""
+    """A horizontal bar with its label, anchored to the screen."""
 
     def __init__(self, label: str, position: tuple, fill_color, warning_color) -> None:
         x, y = position
@@ -56,7 +56,7 @@ class GaugeBar:
 
 
 class Hud:
-    """Affiche ce que le joueur doit savoir."""
+    """Shows what the player needs to know."""
 
     def __init__(self) -> None:
         self._battery = GaugeBar(
@@ -136,7 +136,7 @@ class Hud:
             self._objective.text = label
 
     def show_message(self, text: str) -> None:
-        """Message temporaire. Plus il est long, plus il reste affiché."""
+        """Temporary message. The longer it is, the longer it stays on screen."""
         duration = max(MESSAGE_MIN_DURATION, len(text) / READING_SPEED)
         message = Text(
             text,

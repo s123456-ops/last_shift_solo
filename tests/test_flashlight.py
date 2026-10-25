@@ -31,7 +31,7 @@ def test_battery_drains_while_on():
 def test_empty_battery_stops_at_zero_and_turns_light_off():
     light = Flashlight(capacity=100, drain_per_second=10)
     light.toggle()
-    light.update(dt=15)  # consommerait 150, plus que la batterie disponible
+    light.update(dt=15)  # would use 150, more than the available battery
     assert light.battery == 0
     assert not light.is_on
 
@@ -39,7 +39,7 @@ def test_empty_battery_stops_at_zero_and_turns_light_off():
 def test_flashlight_cannot_turn_on_with_empty_battery():
     light = Flashlight(capacity=100, drain_per_second=10)
     light.toggle()
-    light.update(dt=10)  # consomme exactement les 100 de la batterie
+    light.update(dt=10)  # uses exactly the 100 of the battery
     assert light.battery == 0
     light.toggle()  # tentative de rallumage
     assert not light.is_on
@@ -48,7 +48,7 @@ def test_flashlight_cannot_turn_on_with_empty_battery():
 def test_recharge_adds_battery():
     light = Flashlight(capacity=100, drain_per_second=10)
     light.toggle()
-    light.update(dt=5)  # batterie à 50
+    light.update(dt=5)  # battery at 50
     light.recharge(30)
     assert light.battery == 80
 
@@ -56,8 +56,8 @@ def test_recharge_adds_battery():
 def test_recharge_never_exceeds_capacity():
     light = Flashlight(capacity=100, drain_per_second=10)
     light.toggle()
-    light.update(dt=1)  # batterie à 90
-    light.recharge(20)  # il ne manque que 10
+    light.update(dt=1)  # battery at 90
+    light.recharge(20)  # only 10 missing
     assert light.battery == 100
 
 

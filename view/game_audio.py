@@ -1,4 +1,4 @@
-"""Façade audio : le contrôleur ne parle qu'à cette classe."""
+"""Audio facade: the controller only talks to this class."""
 
 from dataclasses import dataclass
 
@@ -14,7 +14,7 @@ from view.sound_bank import SoundBank, closeness
 
 @dataclass(frozen=True)
 class AudioState:
-    """Ce que le son doit savoir de la partie, à chaque image."""
+    """What the sound needs to know about the game, every frame."""
 
     monster_distance: float
     monster_active: bool
@@ -28,12 +28,12 @@ class AudioState:
 
 
 class GameAudio:
-    """Coordonne les sons du monstre, du joueur et de l'ambiance."""
+    """Coordinates the monster, player and ambience sounds."""
 
     def __init__(self, app, monster: Entity, drip_points: list[Vec3]) -> None:
         bank = SoundBank(app)
-        # Son en 3D : on entend de quel côté vient chaque son. L'écart de volume
-        # selon la distance reste calculé par le jeu (closeness), d'où l'atténuation à 0.
+        # 3D sound: you hear which side each sound comes from. The volume change
+        # with distance is still computed by the game (closeness), hence no drop-off.
         audio3d = Audio3DManager(app.sfxManagerList[0], camera)
         audio3d.setDropOffFactor(0)
         self._monster = MonsterSounds(bank)
@@ -86,5 +86,5 @@ class GameAudio:
 
 
 def set_master_volume(app, volume: float) -> None:
-    """Volume général de tous les sons du jeu : 0 = muet, 1 = plein volume."""
+    """Master volume of every game sound: 0 = mute, 1 = full volume."""
     app.sfxManagerList[0].setVolume(volume)

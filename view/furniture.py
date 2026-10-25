@@ -1,7 +1,7 @@
-"""Mobilier sur lequel reposent les petits objets : bureaux et étagères murales.
+"""Furniture that small objects rest on: desks and wall shelves.
 
-Purement décoratif : aucune règle du jeu. Chaque meuble est collé au mur et
-n'occupe que ce côté de la case, pour laisser le passage libre.
+Purely decorative: no game rules. Each piece stands against the wall and
+only takes that side of the cell, to keep the way clear.
 """
 
 from dataclasses import dataclass
@@ -13,20 +13,20 @@ from view.coords import cell_to_world
 from view.lighting import make_lit
 
 LEG_SIZE = 0.05
-BRACKET_SIZE = (0.03, 0.15)  # équerre sous une étagère : épaisseur, hauteur
+BRACKET_SIZE = (0.03, 0.15)  # bracket under a shelf: thickness, height
 
 
 @dataclass(frozen=True)
 class FurnitureStyle:
-    """Les dimensions d'un meuble, en mètres (une case = 1 m)."""
+    """The dimensions of a piece of furniture, in metres (one cell = 1 m)."""
 
-    width: float  # le long du mur
-    depth: float  # depuis le mur
-    top_height: float  # hauteur du plateau au-dessus du sol
+    width: float  # along the wall
+    depth: float  # away from the wall
+    top_height: float  # height of the top above the floor
     thickness: float
-    has_legs: bool  # un bureau a des pieds, une étagère des équerres
+    has_legs: bool  # a desk has legs, a shelf has brackets
     color: object
-    solid: bool  # le joueur ne passe pas à travers
+    solid: bool  # the player cannot walk through it
 
 
 DESK = FurnitureStyle(
@@ -45,20 +45,20 @@ SHELF = FurnitureStyle(
     thickness=0.04,
     has_legs=False,
     color=color.rgb32(110, 112, 108),
-    solid=False,  # fixée au mur, au-dessus des hanches : on ne la heurte pas
+    solid=False,  # fixed to the wall, above hip height: you don't bump into it
 )
 
 
 def place_furniture(cell: Cell, wall_side: Cell, style: FurnitureStyle) -> Vec3:
-    """Pose le meuble contre le mur et renvoie le centre de son plateau.
+    """Places the furniture against the wall and returns the centre of its top.
 
-    wall_side est la direction (d_ligne, d_colonne) du mur, donnée par
-    FacilityMap.wall_side() : c'est le noyau qui sait où sont les murs.
+    wall_side is the direction (d_row, d_col) of the wall, given by
+    FacilityMap.wall_side(): the core is what knows where the walls are.
     """
     d_row, d_col = wall_side
-    toward_wall = Vec3(d_col, 0, -d_row)  # même convention que cell_to_world
+    toward_wall = Vec3(d_col, 0, -d_row)  # same convention as cell_to_world
     center = cell_to_world(cell) + toward_wall * (0.5 - style.depth / 2)
-    runs_along_x = d_row != 0  # mur au nord ou au sud : le meuble s'allonge en x
+    runs_along_x = d_row != 0  # wall to the north or south: the furniture runs along x
     size_x, size_z = (
         (style.width, style.depth) if runs_along_x else (style.depth, style.width)
     )

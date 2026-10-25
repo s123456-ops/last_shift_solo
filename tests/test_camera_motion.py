@@ -24,7 +24,7 @@ def test_running_bobs_more_than_walking():
 def test_bob_fades_out_after_stopping():
     bob = HeadBob()
     biggest_offset(bob, 2, moving=True, running=True)
-    biggest_offset(bob, 1, moving=False, running=False)  # une seconde d'arrêt
+    biggest_offset(bob, 1, moving=False, running=False)  # one second standing still
     assert biggest_offset(bob, 1, moving=False, running=False) < 0.001
 
 
@@ -34,7 +34,7 @@ def test_bob_fades_out_after_stopping():
 )
 def test_approach_angle_takes_the_short_way(current, target, expected):
     result = approach_angle(current, target, 0.5)
-    assert result % 360 == pytest.approx(expected % 360)  # 360° et 0°, même direction
+    assert result % 360 == pytest.approx(expected % 360)  # 360° and 0°, same direction
 
 
 def test_approach_angle_never_overshoots():
