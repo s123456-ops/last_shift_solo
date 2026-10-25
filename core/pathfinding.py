@@ -1,6 +1,6 @@
-"""Recherche du plus court chemin sur la grille du niveau (parcours en largeur).
+"""Shortest path search on the level grid (breadth-first search).
 
-Module indépendant du moteur de jeu.
+Engine-independent module.
 """
 
 from collections import deque
@@ -12,16 +12,16 @@ DIRECTIONS = ((-1, 0), (1, 0), (0, -1), (0, 1))  # haut, bas, gauche, droite
 
 
 class Pathfinder:
-    """Calcule des chemins entre deux cases sans traverser les murs."""
+    """Computes paths between two cells without going through walls."""
 
     def __init__(self, level: Obstacles) -> None:
         self._level = level
 
     def find_path(self, start: Cell, goal: Cell) -> list[Cell]:
-        """Renvoie les cases à parcourir de start à goal (start exclu, goal inclus).
+        """Returns the cells to walk from start to goal (start excluded, goal included).
 
-        Liste vide si goal est inaccessible ou si on y est déjà. Le départ peut être
-        bloqué (une porte refermée sur le monstre) : il doit pouvoir en sortir.
+        Empty list if goal is unreachable or already reached. The start may be
+        blocked (a door closed on the monster): it must be able to get out.
         """
         if self._level.is_wall(goal):
             return []
@@ -38,7 +38,7 @@ class Pathfinder:
         return []
 
     def next_step(self, start: Cell, goal: Cell) -> Cell:
-        """Prochaine case vers goal, ou start si aucun chemin n'existe."""
+        """Next cell towards goal, or start if no path exists."""
         path = self.find_path(start, goal)
         return path[0] if path else start
 

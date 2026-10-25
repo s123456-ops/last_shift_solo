@@ -1,27 +1,27 @@
-"""Sons du monstre : grognements, cri, pas, respirations."""
+"""Monster sounds: growls, scream, footsteps, breathing."""
 
 from panda3d.core import AudioSound
 
 from view.sound_bank import SoundBank
 
-GROWL_MIN_VOLUME = 0.08  # les grognements restent toujours audibles, faiblement
-GROWL_INTERVAL = (4.0, 10.0)  # secondes entre deux grognements
-BREATH_INTERVAL = (1.5, 3.5)  # secondes entre deux respirations
-PATROL_STEP_INTERVAL = 0.9  # secondes entre deux pas lourds
-CHASE_STEP_INTERVAL = 0.45  # secondes entre deux pas rapides
+GROWL_MIN_VOLUME = 0.08  # growls always stay faintly audible
+GROWL_INTERVAL = (4.0, 10.0)  # seconds between two growls
+BREATH_INTERVAL = (1.5, 3.5)  # seconds between two breaths
+PATROL_STEP_INTERVAL = 0.9  # seconds between two heavy footsteps
+CHASE_STEP_INTERVAL = 0.45  # seconds between two fast footsteps
 
 
 class MonsterSounds:
-    """Joue le bon son selon l'état du monstre et sa proximité."""
+    """Plays the right sound for the monster's state and distance."""
 
     def __init__(self, bank: SoundBank) -> None:
         self._bank = bank
-        self._growls = bank.load("monster", "monstre_grognement_*.ogg")
-        self._short_steps = bank.load("monster", "monstre_pas_court_*.ogg")
-        self._heavy_steps = bank.load("monster", "monstre_pas_lourd_*.ogg")
-        self._breaths = bank.load("monster", "monstre_respiration_*.ogg")
-        self._spotted = bank.load("monster", "monstre_cri.ogg")
-        self._caught = bank.load("monster", "monstre_attrape.ogg")
+        self._growls = bank.load("monster", "monster_growl_*.ogg")
+        self._short_steps = bank.load("monster", "monster_step_fast_*.ogg")
+        self._heavy_steps = bank.load("monster", "monster_step_heavy_*.ogg")
+        self._breaths = bank.load("monster", "monster_breath_*.ogg")
+        self._spotted = bank.load("monster", "monster_scream.ogg")
+        self._caught = bank.load("monster", "monster_caught.ogg")
         self._current_growl: AudioSound | None = None
         self._growl_timer = bank.rng.uniform(*GROWL_INTERVAL)
         self._breath_timer = bank.rng.uniform(*BREATH_INTERVAL)
@@ -40,7 +40,7 @@ class MonsterSounds:
             self._update_breaths(dt, closeness)
 
     def sounds(self) -> list[AudioSound]:
-        """Tous les sons du monstre, pour les accrocher à sa position dans l'espace."""
+        """All the monster's sounds, to attach them to its position in space."""
         return [
             *self._growls,
             *self._short_steps,
@@ -78,7 +78,9 @@ class MonsterSounds:
     def _update_growls(self, dt: float, closeness: float, patrolling: bool) -> None:
         volume = GROWL_MIN_VOLUME + (1 - GROWL_MIN_VOLUME) * closeness
         if self._bank.is_playing(self._current_growl):
-            self._current_growl.setVolume(volume)  # le grognement grossit s'il approche
+            self._current_growl.setVolume(
+                volume
+            )  # the growl gets louder as it comes closer
             return
         if not patrolling:
             return

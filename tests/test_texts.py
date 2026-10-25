@@ -2,29 +2,35 @@ import re
 
 import pytest
 
-from core.texts import SUPPORTED_LANGUAGES, load_catalog, set_language, tr
+from core.texts import (
+    DEFAULT_LANGUAGE,
+    SUPPORTED_LANGUAGES,
+    load_catalog,
+    set_language,
+    tr,
+)
 
 PLACEHOLDER = re.compile(r"\{(\w+)\}")
 
 
 @pytest.fixture(autouse=True)
-def restore_french():
+def restore_default_language():
     yield
-    set_language("fr")  # les autres tests comparent des textes français
+    set_language(DEFAULT_LANGUAGE)  # the other tests compare English texts
 
 
 def test_every_language_has_the_same_keys():
-    reference = load_catalog("fr").keys()
+    reference = load_catalog(DEFAULT_LANGUAGE).keys()
     for language in SUPPORTED_LANGUAGES:
         assert load_catalog(language).keys() == reference, language
 
 
 def test_translations_keep_the_same_placeholders():
-    french = load_catalog("fr")
+    reference = load_catalog(DEFAULT_LANGUAGE)
     for language in SUPPORTED_LANGUAGES:
         for key, text in load_catalog(language).items():
             assert set(PLACEHOLDER.findall(text)) == set(
-                PLACEHOLDER.findall(french[key])
+                PLACEHOLDER.findall(reference[key])
             ), key
 
 
@@ -53,4 +59,4 @@ def test_every_language_names_itself_for_the_title_screen():
     for language in SUPPORTED_LANGUAGES:
         set_language(language)
         names.add(tr("language.name"))
-    assert len(names) == len(SUPPORTED_LANGUAGES)  # deux langues, deux noms
+    assert len(names) == len(SUPPORTED_LANGUAGES)  # two languages, two names

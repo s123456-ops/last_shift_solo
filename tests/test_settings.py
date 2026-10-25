@@ -36,11 +36,11 @@ def test_each_change_is_applied():
 
 
 def test_label_is_translated():
-    assert Setting("options.volume", CHOICES, default=2).label == "Volume : fort"
+    assert Setting("options.volume", CHOICES, default=2).label == "Volume: high"
 
 
 def test_default_outside_the_choices_raises():
-    with pytest.raises(ValueError, match="hors des"):
+    with pytest.raises(ValueError, match="outside the"):
         Setting("options.volume", CHOICES, default=3)
 
 
@@ -50,7 +50,7 @@ def test_every_default_setting_has_a_label_in_every_language():
     for language in SUPPORTED_LANGUAGES:
         set_language(language)
         for setting in default_settings().all():
-            for _ in range(4):  # chaque réglage a 4 valeurs : on les affiche toutes
+            for _ in range(4):  # each setting has 4 values: show them all
                 assert setting.label
                 setting.next()
     set_language("fr")

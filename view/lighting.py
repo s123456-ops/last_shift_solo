@@ -1,6 +1,6 @@
-"""Éclairage de la scène : obscurité, brouillard, lampe torche et lumières fixes.
+"""Scene lighting: darkness, fog, flashlight and fixed lights.
 
-Utilise l'éclairage automatique de Panda3D, le moteur sur lequel Ursina est construit.
+Uses the automatic lighting of Panda3D, the engine Ursina is built on.
 """
 
 import random
@@ -23,20 +23,22 @@ EMERGENCY_ATTENUATION = (1.0, 0.5, 0.6)
 EXIT_COLOR = (0.1, 0.9, 0.3, 1)
 EXIT_ATTENUATION = (1.0, 0.3, 0.3)
 FIXTURE_SCALE = (0.4, 0.08, 0.4)
-FLICKER_CHANCE = 0.02  # probabilité de grésiller, à chaque image
-FLICKER_DIM = 0.15  # intensité pendant un grésillement
-FLASHLIGHT_FOLLOW_SPEED = 12  # plus c'est bas, plus la lampe traîne derrière le regard
-FLASHLIGHT_TREMBLE = 1.2  # degrés : la main tremble quand le souffle manque
+FLICKER_CHANCE = 0.02  # chance of flickering, every frame
+FLICKER_DIM = 0.15  # intensity during a flicker
+FLASHLIGHT_FOLLOW_SPEED = (
+    12  # the lower it is, the more the flashlight lags behind your gaze
+)
+FLASHLIGHT_TREMBLE = 1.2  # degrees: the hand shakes when out of breath
 
 
 def make_lit(entity: Entity) -> Entity:
-    """Fait réagir une entité aux lumières, à la place du rendu non éclairé d'Ursina."""
+    """Makes an entity react to lights, instead of Ursina's unlit rendering."""
     entity.setShaderAuto()
     return entity
 
 
 class Flicker(Entity):
-    """Fait grésiller une lumière : de temps en temps, son intensité chute une image."""
+    """Makes a light flicker: every now and then, its intensity drops for one frame."""
 
     def __init__(self, light: PointLight, base_color: tuple) -> None:
         super().__init__()
@@ -50,9 +52,9 @@ class Flicker(Entity):
 
 
 class FlashlightRig(Entity):
-    """La main qui tient la lampe : elle suit le regard, avec un léger retard.
+    """The hand holding the flashlight: it follows your gaze, with a slight lag.
 
-    Ursina appelle update() à chaque image, même sur l'écran titre.
+    Ursina calls update() every frame, even on the title screen.
     """
 
     def __init__(self) -> None:
@@ -74,10 +76,10 @@ class FlashlightRig(Entity):
 
 
 class Lighting:
-    """Met en place l'ambiance, les lumières fixes, et pilote la lampe torche.
+    """Sets up the ambience and fixed lights, and drives the flashlight.
 
-    Cette classe ne décide jamais si la lampe est allumée : c'est le noyau
-    (la classe Flashlight) qui le décide, et on le lui indique avec set_flashlight().
+    This class never decides whether the flashlight is on: the core does
+    (the Flashlight class), and tells it through set_flashlight().
     """
 
     def __init__(self) -> None:
@@ -96,7 +98,7 @@ class Lighting:
     def set_flashlight(self, on: bool) -> None:
         if self._flashlight_node is None:
             raise RuntimeError(
-                "Lighting.setup() doit être appelé avant set_flashlight()."
+                "Lighting.setup() must be called before set_flashlight()."
             )
         if on == self._flashlight_on:
             return
@@ -107,19 +109,19 @@ class Lighting:
             scene.clearLight(self._flashlight_node)
 
     def set_trembling(self, trembling: bool) -> None:
-        """La lampe tremble tant que le joueur est à bout de souffle."""
+        """The flashlight shakes while the player is out of breath."""
         if self._rig is not None:
             self._rig.trembling = trembling
 
     def set_brightness(self, factor: float) -> None:
-        """Éclaircit (factor > 1) ou assombrit (factor < 1) l'ambiance et le brouillard.
+        """Brightens (factor > 1) or darkens (factor < 1) the ambience and the fog.
 
-        La lampe torche et les lumières de secours ne changent pas : seule
-        la pénombre générale s'adapte à l'écran du joueur.
+        The flashlight and emergency lights do not change: only the overall
+        gloom adapts to the player's screen.
         """
         if self._ambient is None or self._fog is None:
             raise RuntimeError(
-                "Lighting.setup() doit être appelé avant set_brightness()."
+                "Lighting.setup() must be called before set_brightness()."
             )
         red, green, blue, alpha = AMBIENT_COLOR
         self._ambient.setColor((red * factor, green * factor, blue * factor, alpha))
@@ -128,7 +130,7 @@ class Lighting:
     def add_emergency_lights(
         self, cells: tuple[Cell, ...], ceiling_height: float
     ) -> None:
-        """Lumières de secours rouges qui grésillent."""
+        """Red emergency lights that flicker."""
         for cell in cells:
             light = self._add_ceiling_light(
                 cell, ceiling_height, EMERGENCY_COLOR, EMERGENCY_ATTENUATION, color.red
@@ -136,7 +138,7 @@ class Lighting:
             Flicker(light, EMERGENCY_COLOR)
 
     def add_exit_light(self, cell: Cell, ceiling_height: float) -> None:
-        """Lumière verte au-dessus de la sortie, repère visible de loin."""
+        """Green light above the exit, a landmark visible from afar."""
         self._add_ceiling_light(
             cell, ceiling_height, EXIT_COLOR, EXIT_ATTENUATION, color.lime
         )
@@ -149,14 +151,14 @@ class Lighting:
         attenuation: tuple,
         fixture_color,
     ) -> PointLight:
-        """Une lumière ponctuelle sous le plafond, avec son boîtier lumineux."""
+        """A point light under the ceiling, with its glowing fixture."""
         light = PointLight("ceiling_light")
         light.setColor(light_color)
         light.setAttenuation(attenuation)
         node = scene.attachNewNode(light)
         node.setPos(cell_to_world(cell, ceiling_height - 0.3))
         scene.setLight(node)
-        # Le boîtier n'utilise pas make_lit : il reste toujours pleinement visible.
+        # The fixture does not use make_lit: it always stays fully visible.
         Entity(
             model="cube",
             position=cell_to_world(cell, ceiling_height - 0.05),

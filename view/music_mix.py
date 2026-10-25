@@ -1,20 +1,20 @@
-"""Le volume de la musique selon le moment de la partie, et ses fondus.
+"""The music volume for each moment of the game, and its fades.
 
-N'importe pas Ursina : se teste sans fenêtre.
+Does not import Ursina: tested without a window.
 """
 
-MOODS = {  # moment → volume de la musique (0 à 1)
-    "title": 0.55,  # l'écran titre installe l'angoisse
-    "intro": 0.4,  # l'histoire se raconte par-dessus
-    "game": 0.1,  # à peine audible : les bruits du bâtiment passent devant
-    "chase": 0.03,  # presque coupée : on doit entendre le monstre arriver
+MOODS = {  # moment -> music volume (0 to 1)
+    "title": 0.55,  # the title screen sets up the dread
+    "intro": 0.4,  # the story is told over it
+    "game": 0.1,  # barely audible: the building's noises come first
+    "chase": 0.03,  # almost silent: you must hear the monster coming
     "silent": 0.0,  # fin de partie
 }
-FADE_PER_SECOND = 0.25  # vitesse des fondus : de 0,55 à 0,1 en moins de 2 secondes
+FADE_PER_SECOND = 0.25  # fade speed: from 0.55 to 0.1 in under 2 seconds
 
 
 def next_volume(current: float, target: float, dt: float) -> float:
-    """Avance d'un pas vers le volume voulu, sans jamais le dépasser."""
+    """Moves one step towards the wanted volume, never past it."""
     step = FADE_PER_SECOND * dt
     if abs(target - current) <= step:
         return target

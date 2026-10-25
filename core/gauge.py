@@ -1,15 +1,15 @@
-"""Jauge : une valeur bornée entre 0 et une capacité.
+"""Gauge: a value bounded between 0 and a capacity.
 
-Utilisée par composition dans Flashlight et Stamina. Module indépendant du moteur.
+Used by composition in Flashlight and Stamina. Engine-independent module.
 """
 
 
 class Gauge:
-    """Une valeur qui se vide et se remplit sans jamais sortir de [0, capacité]."""
+    """A value that drains and refills without ever leaving [0, capacity]."""
 
     def __init__(self, capacity: float) -> None:
         if capacity <= 0:
-            raise ValueError("La capacité d'une jauge doit être strictement positive.")
+            raise ValueError("A gauge's capacity must be strictly positive.")
         self._capacity = capacity
         self._value = capacity
 

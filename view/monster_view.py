@@ -1,4 +1,4 @@
-"""Affichage du monstre : le modèle 3D glisse d'une case à l'autre."""
+"""Monster display: the 3D model glides from one cell to the next."""
 
 import math
 
@@ -10,13 +10,13 @@ from view.lighting import make_lit
 from view.model_loader import MONSTER, ModelLoadError, place_model
 
 ARRIVAL_TOLERANCE = 0.01
-STEP_FREQUENCY = 5  # pas par seconde (en radians, environ 0,8 pas/s)
-BOB_HEIGHT = 0.08  # amplitude du balancement vertical, en mètres
-SWAY_ANGLE = 4  # inclinaison de côté, en degrés
+STEP_FREQUENCY = 5  # steps per second (in radians, about 0.8 steps/s)
+BOB_HEIGHT = 0.08  # amplitude of the vertical bob, in metres
+SWAY_ANGLE = 4  # sideways tilt, in degrees
 
 
 class MonsterView:
-    """Déplace le modèle en douceur vers la case décidée par le noyau."""
+    """Smoothly moves the model towards the cell decided by the core."""
 
     def __init__(self, app, start: Cell, speed: float) -> None:
         self._entity = Entity(position=cell_to_world(start))
@@ -27,9 +27,7 @@ class MonsterView:
         try:
             place_model(app, MONSTER, self._body)
         except ModelLoadError as error:
-            print(
-                f"Avertissement : {error}. Le monstre est remplacé par un bloc rouge."
-            )
+            print(f"Warning: {error}. The monster is replaced by a red block.")
             make_lit(
                 Entity(
                     parent=self._body,
@@ -42,7 +40,7 @@ class MonsterView:
 
     @property
     def entity(self) -> Entity:
-        """Le point qui se déplace : les sons du monstre y sont accrochés."""
+        """The moving point: the monster's sounds are attached to it."""
         return self._entity
 
     @property
@@ -73,7 +71,7 @@ class MonsterView:
         self._animate_walk(dt)
 
     def _animate_walk(self, dt: float) -> None:
-        """Balancement et boitement, sans squelette : on agite tout le corps."""
+        """Bob and limp, without a skeleton: the whole body is shaken."""
         self._walk_time += dt
         phase = self._walk_time * STEP_FREQUENCY
         self._body.y = abs(math.sin(phase)) * BOB_HEIGHT

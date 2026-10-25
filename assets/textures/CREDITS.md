@@ -1,9 +1,11 @@
-# Crédits des images et textures
+# Image and texture credits
 
-- **Sol, murs, plafond** (`floor_tiles.png`, `wall_tiles.png`, `ceiling_tiles.png`) :
-  dessinés par le script `tools/make_textures.py`, sans image extérieure.
-- **Portes, casier, documents, note, carte d'accès, pile, fusible** : images générées
-  par IA (Gemini) pour ce projet. Les originaux sont dans `source/` ; les versions
-  du jeu sont produites par `tools/import_textures.py`.
-- **Groupe électrogène et porte de sortie** : images de référence générées par IA
-  (Gemini), dans `source/`, converties en modèles 3D avec Hyper3D.
+- **Floor, walls, ceiling, damage, debris** (`floor_tiles.png`, `wall_*.png`,
+  `ceiling_*.png`, `debris_*.png`): drawn by `tools/make_textures.py`, with no
+  external image.
+- **Signs** (`sign_*.png`): drawn by `tools/make_signs.py` from the texts in `locales/`.
+- **Doors, locker, documents, note, keycard, battery, fuse**: images generated with
+  AI (Gemini) for this project. The originals are in `source/`; the game versions
+  are produced by `tools/import_textures.py`.
+- **Generator and exit door**: AI-generated reference images (Gemini), in
+  `source/`, turned into 3D models with Hyper3D.

@@ -1,8 +1,8 @@
-"""Outil : se promener dans un niveau pour tester la carte et l'éclairage.
+"""Tool: walk around a level to test the map and the lighting.
 
-Usage, depuis la racine du projet :
-    python -m tools.preview_level                    (niveau par défaut)
-    python -m tools.preview_level levels/autre.txt   (un autre niveau)
+Usage, from the project root:
+    python -m tools.preview_level                    (default level)
+    python -m tools.preview_level levels/other.txt   (another level)
 """
 
 import sys
@@ -21,7 +21,7 @@ MOUSE_SENSITIVITY = Vec2(25, 25)
 
 
 class PreviewControls(Entity):
-    """F : allumer/éteindre la lampe. Échap : quitter."""
+    """F: switch the flashlight on/off. Esc: quit."""
 
     def __init__(self, lighting: Lighting) -> None:
         super().__init__()
@@ -41,9 +41,9 @@ def main() -> None:
     try:
         level = load_level(path)
     except FileNotFoundError:
-        sys.exit(f"Niveau introuvable : {path}")
+        sys.exit(f"Level not found: {path}")
     except LevelFormatError as error:
-        sys.exit(f"Niveau invalide ({path}) : {error}")
+        sys.exit(f"Invalid level ({path}): {error}")
 
     app = Ursina()
     LevelRenderer(level).build()
@@ -51,7 +51,7 @@ def main() -> None:
     try:
         place_model(app, MONSTER, monster)
     except ModelLoadError as error:
-        print(f"Avertissement : {error}. Le niveau s'affiche sans le monstre.")
+        print(f"Warning: {error}. The level is shown without the monster.")
     player = FirstPersonController(position=cell_to_world(level.player_start))
     player.mouse_sensitivity = MOUSE_SENSITIVITY
     lighting = Lighting()

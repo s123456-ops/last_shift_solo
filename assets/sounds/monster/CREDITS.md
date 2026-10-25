@@ -1,1 +1,2 @@
-tesla-monster-low-growl, vartioh, sound n° 128238 on Freesound
+tesla-monster-low-growl, by vartioh, sound #128238 on Freesound.
+All the sounds in this folder come from Freesound: see CREDITS.md at the project root.

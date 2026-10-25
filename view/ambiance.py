@@ -1,26 +1,26 @@
-"""Ambiance du bâtiment : néon, bruits lointains, courant rétabli."""
+"""Building ambience: neon hum, distant noises, power restored."""
 
 from view.sound_bank import LoopChannel, SoundBank
 
-NEON_VOLUME = 0.15  # à peine audible : on ne le remarque que s'il s'arrête
-NEON_POWER_BOOST = 1.6  # les néons se rallument quand le courant revient
-NEON_DUCKING = 0.8  # il s'efface de 80 % quand le monstre est tout près
-NEON_HIDDEN_FACTOR = 0.2  # dans un casier, le monde se tait
-DISTANT_INTERVAL = (30.0, 60.0)  # secondes entre deux bruits lointains
+NEON_VOLUME = 0.15  # barely audible: you only notice it when it stops
+NEON_POWER_BOOST = 1.6  # the neon lights come back on with the power
+NEON_DUCKING = 0.8  # it fades by 80 % when the monster is right there
+NEON_HIDDEN_FACTOR = 0.2  # inside a locker, the world goes quiet
+DISTANT_INTERVAL = (30.0, 60.0)  # seconds between two distant noises
 DISTANT_VOLUME = 0.3
 POWER_ON_VOLUME = 0.8
 
 
 class AmbienceSounds:
-    """Le fond sonore du bâtiment, toujours discret."""
+    """The building's background sound, always discreet."""
 
     def __init__(self, bank: SoundBank) -> None:
         self._bank = bank
         self._neon = LoopChannel(
-            bank.load_one("ambiance", "ambiance_neon.ogg"), fade_speed=1.0
+            bank.load_one("ambiance", "neon_hum.ogg"), fade_speed=1.0
         )
-        self._distant = bank.load("ambiance", "bruit_lointain_*.ogg")
-        self._power_on = bank.load("ambiance", "courant_retabli.ogg")
+        self._distant = bank.load("ambiance", "distant_noise_*.ogg")
+        self._power_on = bank.load("ambiance", "power_restored.ogg")
         self._distant_timer = bank.rng.uniform(*DISTANT_INTERVAL)
 
     def update(
@@ -33,7 +33,7 @@ class AmbienceSounds:
         self._neon.set(volume)
         self._neon.update(dt)
         if chasing:
-            return  # jamais de bruit lointain pendant une poursuite
+            return  # never a distant noise during a chase
         self._distant_timer -= dt
         if self._distant_timer <= 0:
             self._bank.play(self._distant, DISTANT_VOLUME)

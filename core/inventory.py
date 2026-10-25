@@ -1,13 +1,13 @@
-"""Inventaire du joueur : objets et connaissances. Module indépendant du moteur de jeu."""
+"""The player's inventory: items and knowledge. Engine-independent module."""
 
-FUSE_ITEM = "fusible"
-CODE_START = "code du tableau"
-CODE_END = "fin du code"
-KEYCARD_ITEM = "carte d'accès"
+FUSE_ITEM = "fuse"
+CODE_START = "code start"
+CODE_END = "code end"
+KEYCARD_ITEM = "keycard"
 
 
 class Inventory:
-    """Les objets que le joueur porte et ce qu'il a appris."""
+    """What the player carries and what they have learned."""
 
     def __init__(self) -> None:
         self._items: set[str] = set()
@@ -20,5 +20,5 @@ class Inventory:
 
     def remove(self, item: str) -> None:
         if item not in self._items:
-            raise KeyError(f"L'inventaire ne contient pas « {item} ».")
+            raise KeyError(f"The inventory does not contain '{item}'.")
         self._items.remove(item)

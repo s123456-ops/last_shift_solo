@@ -1,6 +1,6 @@
-"""Niveaux de difficulté : chacun est un objet de réglages, pas une suite de conditions.
+"""Difficulty levels: each one is a settings object, not a chain of conditions.
 
-Module indépendant du moteur de jeu.
+Engine-independent module.
 """
 
 from dataclasses import dataclass
@@ -8,17 +8,17 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Difficulty:
-    """Tout ce qui change entre facile, normal et difficile."""
+    """Everything that changes between easy, normal and hard."""
 
-    name_key: str  # clé du texte affiché (« facile »)
-    grace_period: float  # secondes avant que le monstre ne bouge
-    monster_patrol_speed: float  # cases par seconde
+    name_key: str  # key of the displayed text ("easy")
+    grace_period: float  # seconds before the monster starts moving
+    monster_patrol_speed: float  # cells per second
     monster_chase_speed: float
-    monster_hearing: float  # portée de l'ouïe, en cases
-    flashlight_drain: float  # batterie perdue par seconde (sur 100)
-    plan_shows_keycard: bool  # un indice pour les débutants
-    plan_shows_player: bool  # sans « Vous êtes ici », il faut se repérer seul
-    monster_opens_doors: bool = False  # sinon, une porte fermée l'arrête
+    monster_hearing: float  # hearing range, in cells
+    flashlight_drain: float  # battery lost per second (out of 100)
+    plan_shows_keycard: bool  # a hint for beginners
+    plan_shows_player: bool  # without "You are here", players must find their own way
+    monster_opens_doors: bool = False  # otherwise, a closed door stops it
 
     def __post_init__(self) -> None:
         numbers = (
@@ -29,12 +29,10 @@ class Difficulty:
             self.flashlight_drain,
         )
         if any(number <= 0 for number in numbers):
-            raise ValueError(
-                f"{self.name_key} : tous les réglages doivent être positifs."
-            )
+            raise ValueError(f"{self.name_key}: every setting must be positive.")
         if self.monster_chase_speed < self.monster_patrol_speed:
             raise ValueError(
-                f"{self.name_key} : le monstre doit courir plus vite qu'il ne rôde."
+                f"{self.name_key}: the monster must chase faster than it patrols."
             )
 
 
@@ -44,7 +42,7 @@ EASY = Difficulty(
     monster_patrol_speed=1.5,
     monster_chase_speed=3,
     monster_hearing=4,
-    flashlight_drain=1.25,  # 80 secondes d'éclairage
+    flashlight_drain=1.25,  # 80 seconds of light
     plan_shows_keycard=True,
     plan_shows_player=True,
 )
@@ -54,7 +52,7 @@ NORMAL = Difficulty(
     monster_patrol_speed=2,
     monster_chase_speed=4,
     monster_hearing=6,
-    flashlight_drain=2,  # 50 secondes d'éclairage
+    flashlight_drain=2,  # 50 seconds of light
     plan_shows_keycard=False,
     plan_shows_player=True,
 )
@@ -64,7 +62,7 @@ HARD = Difficulty(
     monster_patrol_speed=2.5,
     monster_chase_speed=5,
     monster_hearing=8,
-    flashlight_drain=100 / 35,  # 35 secondes d'éclairage
+    flashlight_drain=100 / 35,  # 35 seconds of light
     plan_shows_keycard=False,
     plan_shows_player=False,
     monster_opens_doors=True,

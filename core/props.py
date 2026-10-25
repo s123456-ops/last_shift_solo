@@ -1,15 +1,15 @@
-"""Le mobilier des pièces : lits, étagères, caisses… et les cases qu'il occupe.
+"""Room furniture: beds, shelves, crates... and the cells it occupies.
 
-Format du fichier : une ligne par meuble,
-    ligne colonne type direction
-où (ligne, colonne) est la première case occupée, et direction (N, S, E, O)
-le côté vers lequel le meuble est tourné. Un meuble long occupe aussi les
-cases à sa droite. # commence un commentaire.
+File format: one line per piece of furniture,
+    row column kind direction
+where (row, column) is the first occupied cell, and direction (N, S, E, W)
+the side the furniture faces. Long furniture also takes the cells
+on its right. # starts a comment.
 
-Le noyau ne sait pas à quoi ressemblent les meubles (c'est la vue), seulement
-la place qu'ils prennent : le joueur et le monstre doivent en faire le tour.
+The core does not know what furniture looks like (that is the view's job), only
+the space it takes: the player and the monster must walk around it.
 
-Module indépendant du moteur de jeu.
+Engine-independent module.
 """
 
 from dataclasses import dataclass
@@ -18,7 +18,7 @@ from pathlib import Path
 from core.level import FLOOR, Cell, FacilityMap, Obstacles
 from core.signs import DIRECTIONS
 
-LENGTHS = {  # nombre de cases occupées, de gauche à droite
+LENGTHS = {  # number of occupied cells, from left to right
     "archive_rack": 2,
     "bench": 2,
     "break_table": 1,
@@ -42,20 +42,20 @@ LENGTHS = {  # nombre de cases occupées, de gauche à droite
 
 
 class PropFormatError(ValueError):
-    """Le fichier du mobilier est mal formé ou ne correspond pas à la carte."""
+    """The furniture file is malformed or does not match the map."""
 
 
 @dataclass(frozen=True)
 class Prop:
-    """Un meuble posé sur la carte."""
+    """A piece of furniture placed on the map."""
 
     anchor: Cell
     kind: str
-    facing: Cell  # direction (d_ligne, d_colonne) vers laquelle il est tourné
+    facing: Cell  # direction (d_row, d_col) it faces
 
     @property
     def right(self) -> Cell:
-        """La droite du meuble, vue de face : pour un meuble tourné au nord, l'est."""
+        """The furniture's right side, seen from the front: east, for furniture facing north."""
         d_row, d_col = self.facing
         return (d_col, -d_row)
 
@@ -69,7 +69,7 @@ class Prop:
 
 
 class MapWithFurniture:
-    """La carte où les meubles bloquent le passage, pour le joueur comme le monstre."""
+    """The map where furniture blocks the way, for the player and the monster alike."""
 
     def __init__(self, level: Obstacles, props: list[Prop] | tuple[Prop, ...]) -> None:
         self._level = level
@@ -96,12 +96,12 @@ def parse_props(text: str, level: FacilityMap) -> list[Prop]:
             inside = 0 <= row < level.height and 0 <= col < level.width
             if not inside or level.rows[row][col] != FLOOR:
                 raise PropFormatError(
-                    f"Ligne {number} : « {prop.kind} » déborde sur la case {cell}, "
-                    "qui n'est pas du sol libre."
+                    f"Line {number}: '{prop.kind}' spills over cell {cell}, "
+                    "which is not free floor."
                 )
             if cell in taken:
                 raise PropFormatError(
-                    f"Ligne {number} : la case {cell} est déjà prise par un autre meuble."
+                    f"Line {number}: cell {cell} is already taken by another piece of furniture."
                 )
             taken.add(cell)
         props.append(prop)
@@ -112,15 +112,15 @@ def _parse_line(line: str, number: int) -> Prop:
     parts = line.split()
     if len(parts) != 4:
         raise PropFormatError(
-            f"Ligne {number} : il faut « ligne colonne type direction », reçu « {line} »."
+            f"Line {number}: expected 'row column kind direction', got '{line}'."
         )
     row_text, col_text, kind, direction = parts
     if not (row_text.isdigit() and col_text.isdigit()):
-        raise PropFormatError(f"Ligne {number} : la position doit être deux nombres.")
+        raise PropFormatError(f"Line {number}: the position must be two numbers.")
     if kind not in LENGTHS:
-        raise PropFormatError(f"Ligne {number} : meuble « {kind} » inconnu.")
+        raise PropFormatError(f"Line {number}: unknown furniture '{kind}'.")
     if direction not in DIRECTIONS:
         raise PropFormatError(
-            f"Ligne {number} : direction « {direction} » inconnue (N, S, E ou O)."
+            f"Line {number}: unknown direction '{direction}' (N, S, E or W)."
         )
     return Prop((int(row_text), int(col_text)), kind, DIRECTIONS[direction])

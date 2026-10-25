@@ -1,6 +1,6 @@
-"""Réglages du joueur : chacun fait défiler ses valeurs à chaque clic.
+"""Player settings: each one cycles through its values on every click.
 
-N'importe pas Ursina : ce module se teste sans ouvrir de fenêtre.
+Does not import Ursina: this module is tested without opening a window.
 """
 
 from collections.abc import Callable
@@ -10,22 +10,22 @@ from typing import Generic, TypeVar
 from core.texts import tr
 
 T = TypeVar("T")
-Choice = tuple[str, float]  # (clé du texte affiché, valeur appliquée)
+Choice = tuple[str, float]  # (key of the displayed text, applied value)
 
-BRIGHTNESS_CHOICES: tuple[Choice, ...] = (  # multiplicateur de la pénombre
+BRIGHTNESS_CHOICES: tuple[Choice, ...] = (  # multiplier of the gloom
     ("brightness.dark", 0.6),
     ("brightness.normal", 1.0),
     ("brightness.bright", 1.8),
     ("brightness.very_bright", 3.0),
 )
-VOLUME_CHOICES: tuple[Choice, ...] = (  # volume général, de 0 à 1
+VOLUME_CHOICES: tuple[Choice, ...] = (  # master volume, from 0 to 1
     ("volume.off", 0.0),
     ("volume.low", 0.35),
     ("volume.medium", 0.7),
     ("volume.high", 1.0),
 )
 RETRO_CHOICES = (("retro.on", True), ("retro.off", False))  # style PS1
-SENSITIVITY_CHOICES: tuple[Choice, ...] = (  # vitesse de la caméra à la souris
+SENSITIVITY_CHOICES: tuple[Choice, ...] = (  # camera speed with the mouse
     ("sensitivity.low", 15),
     ("sensitivity.normal", 25),
     ("sensitivity.high", 40),
@@ -34,9 +34,9 @@ SENSITIVITY_CHOICES: tuple[Choice, ...] = (  # vitesse de la caméra à la souri
 
 
 class Setting(Generic[T]):
-    """Un réglage à plusieurs valeurs. La vue l'affiche ; `apply` le met en œuvre.
+    """A setting with several values. The view displays it; `apply` puts it into effect.
 
-    La valeur peut être un nombre (luminosité) ou un objet (niveau de difficulté).
+    The value can be a number (brightness) or an object (difficulty level).
     """
 
     def __init__(
@@ -44,7 +44,7 @@ class Setting(Generic[T]):
     ) -> None:
         if not 0 <= default < len(choices):
             raise ValueError(
-                f"Valeur par défaut {default} hors des {len(choices)} choix de {label_key}."
+                f"Default value {default} is outside the {len(choices)} choices of {label_key}."
             )
         self._label_key = label_key
         self._choices = choices
@@ -57,16 +57,16 @@ class Setting(Generic[T]):
 
     @property
     def label(self) -> str:
-        """Le texte du bouton, dans la langue courante (« Volume : fort »)."""
+        """The button text, in the current language ("Volume: high")."""
         return tr(self._label_key, value=tr(self._choices[self._index][0]))
 
     def bind(self, apply: Callable[[T], None]) -> None:
-        """Branche le réglage sur ce qu'il pilote, et applique tout de suite sa valeur."""
+        """Connects the setting to what it controls, and applies its value right away."""
         self._apply = apply
         apply(self.value)
 
     def next(self) -> None:
-        """Passe à la valeur suivante, en revenant au début après la dernière."""
+        """Moves to the next value, going back to the start after the last one."""
         self._index = (self._index + 1) % len(self._choices)
         if self._apply is not None:
             self._apply(self.value)
@@ -74,7 +74,7 @@ class Setting(Generic[T]):
 
 @dataclass(frozen=True)
 class PlayerSettings:
-    """Les réglages partagés par l'écran titre et le menu pause."""
+    """The settings shared by the title screen and the pause menu."""
 
     brightness: Setting
     volume: Setting

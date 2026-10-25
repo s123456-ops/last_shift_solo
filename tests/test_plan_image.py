@@ -17,7 +17,7 @@ def test_plan_has_one_pixel_per_cell():
 def test_walls_and_floor_have_their_colors():
     image = draw_plan(LEVEL)
     assert image.getpixel((0, 0))[:3] == WALL_RGB
-    assert image.getpixel((1, 1))[:3] == FLOOR_RGB  # (x, y) = (colonne, ligne)
+    assert image.getpixel((1, 1))[:3] == FLOOR_RGB  # (x, y) = (column, row)
 
 
 def test_landmarks_point_to_the_key_places():

@@ -1,10 +1,10 @@
-"""Génère les gouttes d'eau du bâtiment dans assets/sounds/ambiance/.
+"""Generates the building's water drips in assets/sounds/ambiance/.
 
-Usage :
+Usage:
     python -m tools.make_sounds
 
-Les sons sont calculés échantillon par échantillon, sans fichier extérieur :
-rien à créditer. Mono, pour que le jeu puisse les placer dans l'espace.
+The sounds are computed sample by sample, with no external file: nothing to
+credit. Mono, so the game can place them in space.
 """
 
 import math
@@ -15,20 +15,20 @@ from pathlib import Path
 
 OUTPUT = Path(__file__).resolve().parent.parent / "assets" / "sounds" / "ambiance"
 SAMPLE_RATE = 44100
-DURATION = 0.45  # secondes
+DURATION = 0.45  # seconds
 SEED = 3
-DROP_PITCHES = (900, 1150, 1400)  # Hz : trois gouttes un peu différentes
+DROP_PITCHES = (900, 1150, 1400)  # Hz: three slightly different drops
 ECHOES = (
     (0.065, 0.30),
     (0.12, 0.15),
-)  # (retard en secondes, volume) : le couloir résonne
+)  # (delay in seconds, volume): the corridor echoes
 
 
 def drop(t: float, pitch: float) -> float:
-    """Le « plic » : une note qui monte très vite et s'éteint aussitôt."""
+    """The "plink": a note that rises very fast and dies out at once."""
     if t < 0:
         return 0.0
-    frequency = pitch * (1 + 1.2 * min(t / 0.025, 1.0))  # la note grimpe en 25 ms
+    frequency = pitch * (1 + 1.2 * min(t / 0.025, 1.0))  # the pitch climbs in 25 ms
     return math.sin(2 * math.pi * frequency * t) * math.exp(-t / 0.03)
 
 
@@ -57,9 +57,9 @@ def main() -> None:
     OUTPUT.mkdir(parents=True, exist_ok=True)
     rng = random.Random(SEED)
     for number, pitch in enumerate(DROP_PITCHES, start=1):
-        path = OUTPUT / f"goutte_{number:02d}.wav"
+        path = OUTPUT / f"drip_{number:02d}.wav"
         save_wav(path, make_drip(pitch, rng))
-        print(f"Son créé : {path.name}")
+        print(f"Sound created: {path.name}")
 
 
 if __name__ == "__main__":

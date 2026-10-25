@@ -1,4 +1,4 @@
-"""Objectif courant du joueur, déduit de l'état du jeu. Module indépendant du moteur."""
+"""The player's current objective, deduced from the game state. Engine-independent."""
 
 from core.facility import Facility
 from core.inventory import CODE_END, CODE_START, FUSE_ITEM, Inventory

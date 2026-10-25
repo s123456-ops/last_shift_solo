@@ -28,12 +28,12 @@ def test_hard_hides_the_player_on_the_plan():
 
 
 def test_monster_slower_in_chase_than_in_patrol_raises():
-    with pytest.raises(ValueError, match="plus vite"):
+    with pytest.raises(ValueError, match="faster"):
         Difficulty("test", 20, 4, 2, 6, 2, False, True)
 
 
 def test_negative_setting_raises():
-    with pytest.raises(ValueError, match="positifs"):
+    with pytest.raises(ValueError, match="positive"):
         Difficulty("test", -5, 2, 4, 6, 2, False, True)
 
 

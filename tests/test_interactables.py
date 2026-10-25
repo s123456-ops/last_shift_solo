@@ -22,7 +22,7 @@ from core.stamina import Stamina
 def make_player_with_low_battery():
     flashlight = Flashlight(capacity=100, drain_per_second=10)
     flashlight.toggle()
-    flashlight.update(dt=8)  # batterie à 20
+    flashlight.update(dt=8)  # battery at 20
     return Player(
         flashlight, Stamina(capacity=100, drain_per_second=10, regen_per_second=5)
     )
@@ -56,7 +56,7 @@ def test_consumed_item_is_no_longer_within_reach():
 
 
 def test_two_items_on_the_same_cell_raise():
-    with pytest.raises(ValueError, match="Deux objets"):
+    with pytest.raises(ValueError, match="Two objects"):
         Interactions([BatteryPickup((2, 2)), BatteryPickup((2, 2))])
 
 
@@ -83,9 +83,9 @@ def test_hiding_turns_the_flashlight_off():
 
 def test_hiding_spot_prompt_changes_when_occupied():
     locker = HidingSpot((3, 3))
-    assert locker.prompt == "Se cacher dans le casier"
+    assert locker.prompt == "Hide in the locker"
     locker.interact(make_player_with_low_battery())
-    assert locker.prompt == "Sortir du casier"
+    assert locker.prompt == "Leave the locker"
 
 
 def test_hiding_spot_is_never_consumed():
@@ -95,7 +95,7 @@ def test_hiding_spot_is_never_consumed():
 
 
 def make_fuse():
-    return Pickup((1, 1), FUSE_ITEM, "Ramasser le fusible", "Fusible récupéré.")
+    return Pickup((1, 1), FUSE_ITEM, "Pick up the fuse", "Fuse collected.")
 
 
 def test_pickup_adds_the_item_to_the_inventory():
@@ -135,7 +135,7 @@ def test_panel_restores_power_with_fuse_and_code():
     facility = Facility()
     PowerPanel((1, 1), facility).interact(player)
     assert facility.power_on
-    assert not player.inventory.has(FUSE_ITEM)  # le fusible a été utilisé
+    assert not player.inventory.has(FUSE_ITEM)  # the fuse has been used
 
 
 def test_exit_door_stays_locked_without_power():
@@ -152,7 +152,7 @@ def test_exit_door_opens_once_power_is_restored():
 
 
 def test_notes_are_readable():
-    assert Note((1, 1), "Titre", "Texte").is_readable
+    assert Note((1, 1), "Titre", "Text").is_readable
 
 
 def test_batteries_are_not_readable():
@@ -162,7 +162,7 @@ def test_batteries_are_not_readable():
 def test_locked_door_stays_closed_without_keycard():
     door = LockedDoor((3, 3))
     message = door.interact(make_player_with_low_battery())
-    assert "Verrouillée" in message
+    assert "Locked" in message
     assert door.is_closed and not door.is_consumed
 
 
@@ -190,8 +190,8 @@ def test_panel_refuses_with_half_of_the_code():
     facility = Facility()
     message = PowerPanel((1, 1), facility).interact(player)
     assert not facility.power_on
-    assert "dernier chiffre" in message
-    assert player.inventory.has(FUSE_ITEM)  # le fusible n'est pas gaspillé
+    assert "last digit" in message
+    assert player.inventory.has(FUSE_ITEM)  # the fuse is not wasted
 
 
 def test_door_opens_then_closes():
@@ -212,4 +212,6 @@ def test_door_is_never_consumed():
 def test_door_cannot_be_used_from_its_own_doorway():
     door = Door((2, 4))
     assert Interactions([door]).near((2, 3)) is door
-    assert Interactions([door]).near((2, 4)) is None  # sinon on s'enfermerait dedans
+    assert (
+        Interactions([door]).near((2, 4)) is None
+    )  # otherwise you would lock yourself in

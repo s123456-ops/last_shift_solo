@@ -1,10 +1,10 @@
-"""Documents à trouver dans le bâtiment : chargement et validation des textes.
+"""Documents to find in the building: loading and validating their texts.
 
-Format du fichier : chaque document commence par une ligne d'en-tête
-    [ligne, colonne] Titre
-suivie de son texte. Les positions doivent correspondre aux cases 'D' de la carte.
+File format: each document starts with a header line
+    [row, column] Title
+followed by its text. Positions must match the 'D' cells of the map.
 
-Module indépendant du moteur de jeu.
+Engine-independent module.
 """
 
 import re
@@ -17,12 +17,12 @@ HEADER = re.compile(r"^\[\s*(\d+)\s*,\s*(\d+)\s*\]\s*(.*)$")
 
 
 class DocumentFormatError(ValueError):
-    """Le fichier des documents est mal formé ou ne correspond pas à la carte."""
+    """The documents file is malformed or does not match the map."""
 
 
 @dataclass(frozen=True)
 class Document:
-    """Un texte à lire, posé sur une case de la carte."""
+    """A text to read, lying on a cell of the map."""
 
     cell: Cell
     title: str
@@ -30,17 +30,17 @@ class Document:
 
 
 def load_documents(path: str | Path, level: FacilityMap) -> dict[Cell, Document]:
-    """Lit le fichier des documents et vérifie qu'il correspond à la carte."""
+    """Reads the documents file and checks that it matches the map."""
     text = Path(path).read_text(encoding="utf-8")
     return parse_documents(text, level)
 
 
 def parse_documents(text: str, level: FacilityMap) -> dict[Cell, Document]:
-    """Transforme le texte en documents rangés par case, ou lève DocumentFormatError."""
+    """Turns the text into documents indexed by cell, or raises DocumentFormatError."""
     documents: dict[Cell, Document] = {}
     for document in _split_into_documents(text):
         if document.cell in documents:
-            raise DocumentFormatError(f"Deux documents à la case {document.cell}.")
+            raise DocumentFormatError(f"Two documents on cell {document.cell}.")
         documents[document.cell] = document
     _check_matches_level(documents, level)
     return documents
@@ -60,7 +60,7 @@ def _split_into_documents(text: str) -> list[Document]:
         elif header is None:
             if line.strip():
                 raise DocumentFormatError(
-                    f"Ligne {number} : texte avant le premier en-tête « [ligne, colonne] Titre »."
+                    f"Line {number}: text before the first header '[row, column] Title'."
                 )
         else:
             body.append(line)
@@ -73,10 +73,10 @@ def _build_document(header, body: list[str]) -> Document:
     number, match = header
     title = match.group(3).strip()
     if not title:
-        raise DocumentFormatError(f"Ligne {number} : le document n'a pas de titre.")
+        raise DocumentFormatError(f"Line {number}: the document has no title.")
     text = "\n".join(body).strip()
     if not text:
-        raise DocumentFormatError(f"Ligne {number} : le document « {title} » est vide.")
+        raise DocumentFormatError(f"Line {number}: the document '{title}' is empty.")
     return Document(
         cell=(int(match.group(1)), int(match.group(2))), title=title, text=text
     )
@@ -89,9 +89,9 @@ def _check_matches_level(documents: dict[Cell, Document], level: FacilityMap) ->
     if misplaced:
         cell = misplaced[0]
         raise DocumentFormatError(
-            f"Le document « {documents[cell].title} » est à la case {cell}, "
-            f"où la carte n'a pas de 'D'."
+            f"The document '{documents[cell].title}' is on cell {cell}, "
+            f"where the map has no 'D'."
         )
     missing = sorted(expected - found)
     if missing:
-        raise DocumentFormatError(f"Aucun texte pour les cases 'D' : {missing}.")
+        raise DocumentFormatError(f"No text for the 'D' cells: {missing}.")

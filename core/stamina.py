@@ -1,13 +1,13 @@
-"""Endurance du joueur : se vide en courant, se recharge en marchant.
+"""The player's stamina: drains while running, recharges while walking.
 
-Module indépendant du moteur de jeu.
+Engine-independent module.
 """
 
 from core.gauge import Gauge
 
 
 class Stamina:
-    """Décide si le joueur peut courir, et gère l'épuisement."""
+    """Decides whether the player can run, and handles exhaustion."""
 
     def __init__(
         self,
@@ -40,7 +40,7 @@ class Stamina:
         return self._is_exhausted
 
     def update(self, dt: float, wants_to_run: bool) -> None:
-        """wants_to_run : le joueur se déplace en tenant la touche de course."""
+        """wants_to_run: the player is moving while holding the run key."""
         self._is_running = wants_to_run and not self._is_exhausted
         if self._is_running:
             self._run(dt)

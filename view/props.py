@@ -1,10 +1,10 @@
-"""À quoi ressemble chaque meuble : une liste de blocs, comme sur PS1.
+"""What each piece of furniture looks like: a list of blocks, PS1 style.
 
-Repère d'un meuble : x vers sa droite, y vers le haut, z vers l'avant (le côté
-où il regarde). L'origine est le centre de sa première case, au sol. Un meuble
-de 2 cases s'étend jusqu'à x = 1. Un meuble « contre le mur » a son dos en z = -0.5.
+Furniture frame: x to its right, y up, z forward (the side it faces).
+The origin is the centre of its first cell, on the floor. A 2-cell piece
+extends up to x = 1. A piece "against the wall" has its back at z = -0.5.
 
-N'importe pas Ursina : ce sont des données, vérifiées par les tests.
+Does not import Ursina: this is data, checked by the tests.
 """
 
 from dataclasses import dataclass
@@ -32,7 +32,7 @@ OLIVE = (108, 114, 100)
 
 @dataclass(frozen=True)
 class Part:
-    """Un bloc du meuble : centre, taille (en mètres) et couleur."""
+    """One block of the furniture: centre, size (in metres) and colour."""
 
     center: Vector
     size: Vector
@@ -45,7 +45,7 @@ def _legs(
     height: float,
     color: Color,
 ) -> list[Part]:
-    """Quatre pieds fins aux coins d'un plateau."""
+    """Four thin legs at the corners of a top."""
     return [
         Part((x, height / 2, z), (0.05, height, 0.05), color)
         for x in x_range
@@ -54,7 +54,7 @@ def _legs(
 
 
 def _rack(z: float) -> list[Part]:
-    """Une étagère métallique de 2 cases, chargée de cartons."""
+    """A 2-cell metal shelving unit, loaded with cardboard boxes."""
     parts = [
         Part((x, 1.0, z + dz), (0.05, 2.0, 0.05), DARK_METAL)
         for x in (-0.45, 1.45)
@@ -62,7 +62,7 @@ def _rack(z: float) -> list[Part]:
     ]
     shelves = (0.1, 0.55, 1.0, 1.45, 1.9)
     parts += [Part((0.5, y, z), (1.95, 0.03, 0.45), STEEL) for y in shelves]
-    boxes = (  # (étagère, position x) : rangées irrégulières, comme un vrai dépôt
+    boxes = (  # (shelf, x position): uneven rows, like a real storeroom
         (0, -0.25),
         (0, 0.2),
         (0, 1.15),
@@ -100,8 +100,8 @@ def _desk(with_monitors: bool) -> list[Part]:
     parts = [
         Part((0.5, 0.75, -0.15), (1.4, 0.05, 0.7), WOOD),
         Part((-0.17, 0.36, -0.15), (0.05, 0.72, 0.66), WOOD),
-        Part((1.0, 0.36, -0.15), (0.4, 0.72, 0.66), WOOD),  # caisson à tiroirs
-        Part((0.4, 0.45, 0.28), (0.45, 0.06, 0.45), FABRIC),  # assise de la chaise
+        Part((1.0, 0.36, -0.15), (0.4, 0.72, 0.66), WOOD),  # drawer unit
+        Part((0.4, 0.45, 0.28), (0.45, 0.06, 0.45), FABRIC),  # chair seat
         Part((0.4, 0.22, 0.28), (0.05, 0.42, 0.05), DARK_METAL),
         Part((0.4, 0.75, 0.48), (0.45, 0.5, 0.06), FABRIC),  # dossier
     ]
@@ -145,7 +145,7 @@ CATALOG: dict[str, list[Part]] = {
     "gurney": [
         Part((0.5, 0.8, 0), (1.9, 0.08, 0.6), STEEL),
         Part((0.5, 0.88, 0), (1.85, 0.08, 0.55), SHEET),
-        Part((1.4, 0.9, 0.25), (0.03, 1.8, 0.03), STEEL),  # pied à perfusion
+        Part((1.4, 0.9, 0.25), (0.03, 1.8, 0.03), STEEL),  # IV pole
         *_legs((-0.4, 1.4), (-0.25, 0.25), 0.76, STEEL),
     ],
     "crate": _crate(0.9, 0.45),
@@ -180,7 +180,7 @@ CATALOG: dict[str, list[Part]] = {
         Part((0, 0.15, 0), (0.8, 0.3, 0.8), DARK_METAL),
         Part((0, 1.1, 0), (0.68, 1.6, 0.68), MURKY_GREEN),  # liquide trouble
         Part((0, 1.97, 0), (0.8, 0.14, 0.8), DARK_METAL),
-        Part((0.3, 2.5, 0.3), (0.06, 1.0, 0.06), DARK_METAL),  # tuyau vers le plafond
+        Part((0.3, 2.5, 0.3), (0.06, 1.0, 0.06), DARK_METAL),  # pipe up to the ceiling
     ],
     "toilet": [
         Part((0, 0.2, -0.2), (0.4, 0.4, 0.5), STEEL),
@@ -195,6 +195,6 @@ CATALOG: dict[str, list[Part]] = {
     "workbench": [
         Part((0.5, 0.88, -0.15), (1.9, 0.06, 0.7), WOOD),
         *_legs((-0.4, 1.4), (-0.45, 0.15), 0.85, DARK_METAL),
-        Part((0.2, 0.99, -0.25), (0.45, 0.16, 0.22), RED),  # caisse à outils
+        Part((0.2, 0.99, -0.25), (0.45, 0.16, 0.22), RED),  # toolbox
     ],
 }

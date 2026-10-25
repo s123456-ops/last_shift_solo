@@ -1,14 +1,14 @@
-"""Outil : vérifier un modèle 3D (taille, orientation, rendu dans le noir).
+"""Tool: check a 3D model (size, orientation, look in the dark).
 
-Usage, depuis la racine du projet :
+Usage, from the project root:
     python -m tools.preview_model assets/monster/monster.bam
 
-Touches :
-    R            pivoter de 90° autour de l'axe gauche-droite (si le modèle est couché)
-    T            pivoter de 90° autour de l'axe vertical (si le modèle est de dos)
-    Flèche haut  agrandir     Flèche bas  rétrécir
-    F            lampe torche     Échap  quitter
-    Clic droit maintenu : tourner autour du modèle.   Molette : zoomer.
+Keys:
+    R            rotate 90° around the left-right axis (if the model lies down)
+    T            rotate 90° around the vertical axis (if the model faces away)
+    Up arrow     bigger       Down arrow  smaller
+    F            flashlight   Esc         quit
+    Hold right click: orbit around the model.   Mouse wheel: zoom.
 """
 
 import sys
@@ -25,7 +25,7 @@ FLOOR_SIZE = 14
 
 
 class ModelInspector(Entity):
-    """Affiche un modèle et permet de régler sa taille et son orientation."""
+    """Shows a model and lets you adjust its size and orientation."""
 
     def __init__(self, model_node, lighting: Lighting) -> None:
         super().__init__()
@@ -68,7 +68,7 @@ class ModelInspector(Entity):
 
 def main() -> None:
     if len(sys.argv) < 2:
-        sys.exit("Usage : python -m tools.preview_model chemin/vers/modele.bam")
+        sys.exit("Usage: python -m tools.preview_model path/to/model.bam")
 
     app = Ursina()
     try:

@@ -1,17 +1,17 @@
-"""Style « horreur PS1 » : basse résolution, couleurs réduites et tramage.
+"""PS1 horror style: low resolution, reduced colours and dithering.
 
-Un seul shader (un petit programme exécuté par la carte graphique) retouche
-l'image de la caméra. Les règles, la carte et les modèles ne changent pas,
-et l'interface (HUD, plan, menus) reste nette, car elle a sa propre caméra.
+A single shader (a small program run by the graphics card) retouches the
+camera image. Rules, map and models do not change, and the interface
+(HUD, plan, menus) stays sharp, because it has its own camera.
 """
 
 from ursina import Shader, camera
 
-VIRTUAL_HEIGHT = 240  # lignes de pixels à l'écran, comme sur la PlayStation
-COLOR_LEVELS = 32  # nuances par couleur primaire (15 bits, comme la PS1)
-DITHER_STRENGTH = 1.0  # tramage : 0 = aplats et bandes visibles, 1 = grain d'époque
+VIRTUAL_HEIGHT = 240  # lines of pixels on screen, like the PlayStation
+COLOR_LEVELS = 32  # shades per primary colour (15 bits, like the PS1)
+DITHER_STRENGTH = 1.0  # dithering: 0 = flat areas and visible banding, 1 = period grain
 
-# Le code GLSL reste en ASCII : certains pilotes graphiques refusent les accents.
+# The GLSL code stays ASCII: some graphics drivers reject accented characters.
 _VERTEX = """
 #version 150
 uniform mat4 p3d_ModelViewProjectionMatrix;
@@ -75,11 +75,11 @@ _shader: Shader | None = None
 
 
 def set_retro_style(enabled: bool) -> None:
-    """Active ou retire le style PS1 sur l'image du jeu."""
+    """Applies or removes the PS1 style on the game image."""
     global _shader
     if not enabled:
         camera.shader = None
         return
     if _shader is None:
-        _shader = _build_shader()  # créé une seule fois, au premier besoin
+        _shader = _build_shader()  # created only once, the first time it is needed
     camera.shader = _shader

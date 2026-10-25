@@ -1,6 +1,6 @@
-"""Comportement du monstre : patrouille, poursuite, recherche (patron State).
+"""Monster behaviour: patrol, chase, search (State pattern).
 
-Module indépendant du moteur de jeu.
+Engine-independent module.
 """
 
 from abc import ABC, abstractmethod
@@ -10,12 +10,12 @@ from core.level import Cell, Obstacles
 from core.pathfinding import Pathfinder
 from core.perception import can_hear, can_see
 
-SEARCH_STEPS = 6  # nombre de pas passés à chercher sur place avant d'abandonner
+SEARCH_STEPS = 6  # steps spent searching on the spot before giving up
 
 
 @dataclass(frozen=True)
 class Situation:
-    """Ce que le monstre peut savoir du joueur à un instant donné."""
+    """What the monster can know about the player at a given moment."""
 
     player_cell: Cell
     player_running: bool
@@ -24,7 +24,7 @@ class Situation:
 
 
 class MonsterState(ABC):
-    """Un état du monstre : il décide de la transition, puis de la prochaine case."""
+    """A monster state: it decides the transition, then the next cell."""
 
     @abstractmethod
     def next_state(
@@ -36,7 +36,7 @@ class MonsterState(ABC):
 
 
 class Patrol(MonsterState):
-    """Suit sa ronde et ignore le joueur tant qu'il ne le perçoit pas."""
+    """Follows its route and ignores the player until it perceives them."""
 
     def __init__(self, route: tuple[Cell, ...]) -> None:
         self._route = route
@@ -54,7 +54,7 @@ class Patrol(MonsterState):
 
 
 class Chase(MonsterState):
-    """Fonce vers la dernière position où il a perçu le joueur."""
+    """Rushes towards the last position where it perceived the player."""
 
     def __init__(self, last_seen: Cell) -> None:
         self._last_seen = last_seen
@@ -70,7 +70,7 @@ class Chase(MonsterState):
 
 
 class Search(MonsterState):
-    """Va à la dernière position connue, cherche un moment, puis reprend sa ronde."""
+    """Goes to the last known position, searches for a while, then resumes its patrol."""
 
     def __init__(self, last_seen: Cell, steps: int = SEARCH_STEPS) -> None:
         self._last_seen = last_seen
@@ -85,13 +85,13 @@ class Search(MonsterState):
 
     def next_cell(self, monster):
         step = monster.pathfinder.next_step(monster.cell, self._last_seen)
-        if step == monster.cell:  # arrivé sur place, ou chemin impossible : il cherche
+        if step == monster.cell:  # arrived, or no path: it searches
             self._steps_left -= 1
         return step
 
 
 class Monster:
-    """Le monstre : sa position, ses sens et son état courant."""
+    """The monster: its position, its senses and its current state."""
 
     def __init__(
         self,
@@ -103,10 +103,14 @@ class Monster:
         hearing_range: float = 6,
     ) -> None:
         if not patrol_route:
-            raise ValueError("La ronde du monstre doit contenir au moins une case.")
+            raise ValueError(
+                "The monster's patrol route must contain at least one cell."
+            )
         for cell in patrol_route:
             if level.is_wall(cell):
-                raise ValueError(f"La ronde du monstre passe par un mur : {cell}.")
+                raise ValueError(
+                    f"The monster's patrol route goes through a wall: {cell}."
+                )
         self._level = level
         self._pathfinder = Pathfinder(level)
         self._cell = start
@@ -142,7 +146,7 @@ class Monster:
 
     def perceives(self, situation: Situation) -> bool:
         if situation.player_hidden:
-            return self.is_chasing  # il vous a vu entrer : il sait où vous êtes
+            return self.is_chasing  # it saw you get in: it knows where you are
         sight = (
             self._sight_with_light if situation.flashlight_on else self._sight_in_dark
         )
@@ -153,7 +157,7 @@ class Monster:
         )
 
     def step(self, situation: Situation) -> Cell:
-        """Appelé chaque fois que le monstre atteint une case : décide de la suivante."""
+        """Called each time the monster reaches a cell: decides the next one."""
         self._state = self._state.next_state(self, self.perceives(situation), situation)
         self._cell = self._state.next_cell(self)
         return self._cell

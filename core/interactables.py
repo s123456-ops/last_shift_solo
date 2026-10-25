@@ -1,6 +1,6 @@
-"""Objets avec lesquels le joueur interagit (touche E).
+"""Objects the player interacts with (E key).
 
-Module indépendant du moteur de jeu.
+Engine-independent module.
 """
 
 from abc import ABC, abstractmethod
@@ -17,11 +17,11 @@ REACH = (
     (1, 0),
     (0, -1),
     (0, 1),
-)  # la case du joueur et ses 4 voisines
+)  # the player's cell and its 4 neighbours
 
 
 class Interactable(ABC):
-    """Un objet posé sur une case. Chaque sous-classe définit son effet."""
+    """An object placed on a cell. Each subclass defines its own effect."""
 
     def __init__(self, cell: Cell) -> None:
         self._cell = cell
@@ -33,30 +33,30 @@ class Interactable(ABC):
 
     @property
     def is_consumed(self) -> bool:
-        """Vrai quand l'objet a été utilisé et doit disparaître."""
+        """True once the object has been used and must disappear."""
         return self._consumed
 
     @property
     def is_readable(self) -> bool:
-        """Vrai si l'interaction ouvre un texte à lire, affiché en grand."""
+        """True if interacting opens a text to read, shown full screen."""
         return False
 
     def reachable_from(self, cell: Cell) -> bool:
-        """Le joueur, sur cette case, peut-il utiliser l'objet ? Oui, par défaut."""
+        """Can the player, standing on this cell, use the object? Yes by default."""
         return True
 
     @property
     @abstractmethod
     def prompt(self) -> str:
-        """Texte affiché quand le joueur est à portée."""
+        """Text shown when the player is within reach."""
 
     @abstractmethod
     def interact(self, player: Player) -> str:
-        """Applique l'effet de l'objet et renvoie le message à afficher."""
+        """Applies the object's effect and returns the message to display."""
 
 
 class BatteryPickup(Interactable):
-    """Une pile qui recharge la lampe, utilisable une seule fois."""
+    """A battery that recharges the flashlight, single use."""
 
     def __init__(self, cell: Cell, charge: float = 40) -> None:
         super().__init__(cell)
@@ -73,7 +73,7 @@ class BatteryPickup(Interactable):
 
 
 class HidingSpot(Interactable):
-    """Un casier où se cacher. Il n'est jamais consommé : on peut y revenir."""
+    """A locker to hide in. It is never consumed: the player can come back."""
 
     def __init__(self, cell: Cell) -> None:
         super().__init__(cell)
@@ -96,7 +96,7 @@ class HidingSpot(Interactable):
 
 
 class Pickup(Interactable):
-    """Un objet à ramasser, qui rejoint l'inventaire (le fusible)."""
+    """An object to pick up, which goes into the inventory (the fuse)."""
 
     def __init__(self, cell: Cell, item: str, prompt: str, message: str) -> None:
         super().__init__(cell)
@@ -115,7 +115,7 @@ class Pickup(Interactable):
 
 
 class Note(Interactable):
-    """Un texte à lire, qui peut apprendre quelque chose au joueur (le code)."""
+    """A text to read, which may teach the player something (the code)."""
 
     def __init__(
         self, cell: Cell, title: str, text: str, grants: str | None = None
@@ -140,7 +140,7 @@ class Note(Interactable):
 
 
 class PowerPanel(Interactable):
-    """Le tableau électrique : fusible + code = courant rétabli."""
+    """The generator: fuse + full code = power restored."""
 
     def __init__(self, cell: Cell, facility: Facility) -> None:
         super().__init__(cell)
@@ -167,10 +167,10 @@ class PowerPanel(Interactable):
 
 
 class LockedDoor(Interactable):
-    """Une porte de sécurité. La carte d'accès l'ouvre, puis elle disparaît.
+    """A security door. The keycard opens it, then it disappears.
 
-    Une porte ouverte est « consommée » : la vue la retire, et MapWithDoors
-    cesse de la compter comme un mur pour le monstre.
+    An open door is "consumed": the view removes it, and MapWithDoors
+    stops counting it as a wall for the monster.
     """
 
     def __init__(self, cell: Cell, key_item: str = KEYCARD_ITEM) -> None:
@@ -188,15 +188,15 @@ class LockedDoor(Interactable):
     def interact(self, player: Player) -> str:
         if not player.inventory.has(self._key_item):
             return tr("door.locked")
-        # la carte reste dans l'inventaire : elle ouvre aussi les autres portes
+        # the keycard stays in the inventory: it also opens the other doors
         self._consumed = True
         return tr("door.open")
 
 
 class Door(Interactable):
-    """Une porte normale : E l'ouvre, E la referme. Elle n'est jamais consommée.
+    """A regular door: E opens it, E closes it again. It is never consumed.
 
-    Fermée, elle arrête le monstre, sauf en difficile où il l'ouvre lui-même.
+    When closed, it stops the monster, except in hard mode where it opens doors itself.
     """
 
     def __init__(self, cell: Cell) -> None:
@@ -212,19 +212,19 @@ class Door(Interactable):
         return tr("door.close_prompt") if self._open else tr("door.open_prompt")
 
     def reachable_from(self, cell: Cell) -> bool:
-        return cell != self.cell  # on ne referme pas une porte sur soi-même
+        return cell != self.cell  # you don't close a door on yourself
 
     def interact(self, player: Player) -> str:
         self._open = not self._open
-        return ""  # le bruit et le mouvement de la porte suffisent
+        return ""  # the door's sound and movement are enough
 
     def open(self) -> None:
-        """Ouverture sans joueur : c'est le monstre qui pousse la porte."""
+        """Opening without the player: the monster pushes the door."""
         self._open = True
 
 
 class ExitDoor(Interactable):
-    """La porte de sortie, verrouillée tant que le courant n'est pas rétabli."""
+    """The exit door, locked until the power is restored."""
 
     def __init__(self, cell: Cell, facility: Facility) -> None:
         super().__init__(cell)
@@ -242,17 +242,17 @@ class ExitDoor(Interactable):
 
 
 class Interactions:
-    """Les objets du niveau, retrouvés par leur case."""
+    """The level's objects, looked up by cell."""
 
     def __init__(self, items: list[Interactable]) -> None:
         self._items: dict[Cell, Interactable] = {}
         for item in items:
             if item.cell in self._items:
-                raise ValueError(f"Deux objets sur la case {item.cell}.")
+                raise ValueError(f"Two objects on cell {item.cell}.")
             self._items[item.cell] = item
 
     def near(self, cell: Cell) -> Interactable | None:
-        """L'objet encore disponible sur la case du joueur ou une case voisine."""
+        """The object still available on the player's cell or a neighbouring cell."""
         row, col = cell
         for d_row, d_col in REACH:
             item = self._items.get((row + d_row, col + d_col))

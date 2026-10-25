@@ -1,33 +1,33 @@
-"""Sons du joueur : pas, souffle, cœur, lampe, ramassage, casier."""
+"""Player sounds: footsteps, breathing, heartbeat, flashlight, pickup, locker."""
 
 from view.sound_bank import LoopChannel, SoundBank
 
-WALK_STEP_INTERVAL = 0.55  # secondes entre deux pas en marchant
-RUN_STEP_INTERVAL = 0.32  # secondes entre deux pas en courant
-WALK_VOLUME = 0.25  # toujours plus bas que les pas du monstre
+WALK_STEP_INTERVAL = 0.55  # seconds between two footsteps while walking
+RUN_STEP_INTERVAL = 0.32  # seconds between two footsteps while running
+WALK_VOLUME = 0.25  # always quieter than the monster's footsteps
 RUN_VOLUME = 0.4
 BREATH_VOLUME = 0.5
 HEART_MAX_VOLUME = 0.8
-HEART_THRESHOLD = 0.15  # en dessous de cette proximité, le cœur reste calme et muet
-HEART_MAX_SPEEDUP = 0.6  # le cœur bat jusqu'à 60 % plus vite
+HEART_THRESHOLD = 0.15  # below this closeness, the heart stays calm and silent
+HEART_MAX_SPEEDUP = 0.6  # the heart beats up to 60 % faster
 CLICK_VOLUME = 0.5
 PICKUP_VOLUME = 0.4
 LOCKER_VOLUME = 0.6
 
 
 class PlayerSounds:
-    """Les sons produits par le joueur, ou ressentis par lui."""
+    """The sounds the player makes, or feels."""
 
     def __init__(self, bank: SoundBank) -> None:
         self._bank = bank
-        self._walk = bank.load("player", "joueur_pas_*.ogg")
-        self._run = bank.load("player", "joueur_course_*.ogg")
-        self._light_on = bank.load("player", "lampe_on.ogg")
-        self._light_off = bank.load("player", "lampe_off.ogg")
-        self._pickup = bank.load("player", "ramassage.ogg")
-        self._locker = bank.load("player", "casier.ogg")
-        self._breath = LoopChannel(bank.load_one("player", "joueur_souffle.ogg"))
-        self._heart = LoopChannel(bank.load_one("player", "joueur_coeur.ogg"))
+        self._walk = bank.load("player", "player_step_*.ogg")
+        self._run = bank.load("player", "player_run_*.ogg")
+        self._light_on = bank.load("player", "flashlight_on.ogg")
+        self._light_off = bank.load("player", "flashlight_off.ogg")
+        self._pickup = bank.load("player", "pickup.ogg")
+        self._locker = bank.load("player", "locker.ogg")
+        self._breath = LoopChannel(bank.load_one("player", "player_breath.ogg"))
+        self._heart = LoopChannel(bank.load_one("player", "player_heartbeat.ogg"))
         self._step_timer = 0.0
 
     def update(
@@ -67,7 +67,9 @@ class PlayerSounds:
 
     def _update_steps(self, dt: float, moving: bool, running: bool) -> None:
         if not moving:
-            self._step_timer = 0.0  # le premier pas sonnera dès qu'on repart
+            self._step_timer = (
+                0.0  # the first step sounds as soon as the player moves again
+            )
             return
         self._step_timer -= dt
         if self._step_timer > 0:

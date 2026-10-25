@@ -1,4 +1,4 @@
-"""Le plan du bâtiment avec ses portes de sécurité. Module indépendant du moteur de jeu."""
+"""The building plan with its security doors. Engine-independent module."""
 
 from collections.abc import Sequence
 from typing import Protocol
@@ -7,7 +7,7 @@ from core.level import Cell, Obstacles
 
 
 class Barrier(Protocol):
-    """Tout ce qui peut boucher une case : porte de sécurité ou porte normale."""
+    """Anything that can block a cell: a security door or a regular door."""
 
     @property
     def cell(self) -> Cell: ...
@@ -17,10 +17,10 @@ class Barrier(Protocol):
 
 
 class MapWithDoors:
-    """Le plan vu par le monstre : un mur, ou une porte encore fermée, bloque.
+    """The map as the monster sees it: a wall, or a door still closed, blocks the way.
 
-    Il enveloppe le plan d'origine sans le modifier, et les portes restent la seule
-    source de vérité : quand le joueur en ouvre une, le monstre peut y passer.
+    It wraps the original map without changing it, and the doors remain the single
+    source of truth: when the player opens one, the monster can go through.
     """
 
     def __init__(self, level: Obstacles, doors: Sequence[Barrier]) -> None:

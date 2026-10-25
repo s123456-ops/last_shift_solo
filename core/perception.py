@@ -1,6 +1,6 @@
-"""Perception du monstre : vue et ouïe sur la grille.
+"""Monster perception: sight and hearing on the grid.
 
-Module indépendant du moteur de jeu.
+Engine-independent module.
 """
 
 import math
@@ -13,7 +13,7 @@ def distance(a: Cell, b: Cell) -> float:
 
 
 def cells_between(a: Cell, b: Cell) -> list[Cell]:
-    """Cases traversées par la ligne droite entre a et b, extrémités exclues."""
+    """Cells crossed by the straight line between a and b, ends excluded."""
     steps = max(abs(b[0] - a[0]), abs(b[1] - a[1]))
     cells = []
     for i in range(1, steps):
@@ -25,12 +25,12 @@ def cells_between(a: Cell, b: Cell) -> list[Cell]:
 def can_see(
     level: Obstacles, observer: Cell, target: Cell, max_distance: float
 ) -> bool:
-    """Vrai si la cible est assez proche et qu'aucun mur ne coupe la ligne de vue."""
+    """True if the target is close enough and no wall cuts the line of sight."""
     if distance(observer, target) > max_distance:
         return False
     return not any(level.is_wall(cell) for cell in cells_between(observer, target))
 
 
 def can_hear(observer: Cell, target: Cell, max_distance: float) -> bool:
-    """L'ouïe traverse les murs : seule la distance compte."""
+    """Hearing goes through walls: only distance matters."""
     return distance(observer, target) <= max_distance

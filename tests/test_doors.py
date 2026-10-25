@@ -8,7 +8,7 @@ from core.pathfinding import Pathfinder
 from core.player import Player
 from core.stamina import Stamina
 
-# Deux pièces reliées par une seule porte de sécurité, en (2, 4).
+# Two rooms joined by a single security door, at (2, 4).
 LEVEL = parse_level("""
 #########
 #P.F#G.E#

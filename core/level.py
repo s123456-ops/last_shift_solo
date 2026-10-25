@@ -1,6 +1,6 @@
-"""Chargement et validation des niveaux.
+"""Loading and validating levels.
 
-Ce module ne dépend d'aucun moteur de jeu : il peut être testé sans ouvrir de fenêtre.
+This module does not depend on any game engine: it can be tested without a window.
 """
 
 from dataclasses import dataclass
@@ -21,7 +21,7 @@ EMERGENCY_LIGHT = "L"
 HIDING_SPOT = "H"
 KEYCARD = "K"
 SECURITY_DOOR = "S"
-DOOR = "O"  # porte normale, qu'on ouvre et referme avec E
+DOOR = "O"  # regular door, opened and closed with E
 KNOWN_TILES = {
     WALL,
     FLOOR,
@@ -41,26 +41,26 @@ KNOWN_TILES = {
 }
 
 
-Cell = tuple[int, int]  # (ligne, colonne)
+Cell = tuple[int, int]  # (row, column)
 
 
 class Obstacles(Protocol):
-    """Tout ce qui sait dire si une case bloque le passage et la vue.
+    """Anything that can tell whether a cell blocks movement and sight.
 
-    FacilityMap en fait partie, mais aussi MapWithDoors (core/doors.py) :
-    le monstre et la recherche de chemin acceptent l'un comme l'autre.
+    FacilityMap is one, and so are MapWithDoors (core/doors.py) and
+    MapWithFurniture (core/props.py): the monster and pathfinding accept any of them.
     """
 
     def is_wall(self, cell: Cell) -> bool: ...
 
 
 class LevelFormatError(ValueError):
-    """Le contenu du niveau ne respecte pas le format attendu."""
+    """The level content does not follow the expected format."""
 
 
 @dataclass(frozen=True)
 class FacilityMap:
-    """Plan du bâtiment : une grille de cases et la position des éléments du jeu."""
+    """Building plan: a grid of cells and the position of the game elements."""
 
     rows: tuple[str, ...]
     player_start: Cell
@@ -73,7 +73,7 @@ class FacilityMap:
     document_cells: tuple[Cell, ...]
     emergency_light_cells: tuple[Cell, ...]
     hiding_spot_cells: tuple[Cell, ...]
-    keycard_cell: Cell | None = None  # facultative : un niveau peut s'en passer
+    keycard_cell: Cell | None = None  # optional: a level can do without it
     security_door_cells: tuple[Cell, ...] = ()
     door_cells: tuple[Cell, ...] = ()
 
@@ -86,7 +86,7 @@ class FacilityMap:
         return len(self.rows[0])
 
     def is_wall(self, cell: Cell) -> bool:
-        """Une case hors de la carte est considérée comme un mur."""
+        """A cell outside the map counts as a wall."""
         row, col = cell
         if not (0 <= row < self.height and 0 <= col < self.width):
             return True
@@ -96,10 +96,10 @@ class FacilityMap:
         return _cells_with(self.rows, WALL)
 
     def wall_side(self, cell: Cell) -> Cell | None:
-        """La direction (d_ligne, d_colonne) d'un mur droit collé à la case, ou None.
+        """The direction (d_row, d_col) of a straight wall touching the cell, or None.
 
-        « Droit » : le mur continue des deux côtés. On ne pose pas un meuble
-        contre le bord d'une ouverture. Sert à placer bureaux et étagères.
+        "Straight": the wall continues on both sides. Furniture is never placed
+        against the edge of an opening. Used to place desks and shelves.
         """
         row, col = cell
         for d_row, d_col in ((-1, 0), (1, 0), (0, -1), (0, 1)):
@@ -113,24 +113,24 @@ class FacilityMap:
 
 
 def load_level(path: str | Path) -> FacilityMap:
-    """Lit un fichier de niveau et le valide."""
+    """Reads a level file and validates it."""
     text = Path(path).read_text(encoding="utf-8")
     return parse_level(text)
 
 
 def parse_level(text: str) -> FacilityMap:
-    """Transforme le texte d'un niveau en FacilityMap, ou lève LevelFormatError."""
+    """Turns a level's text into a FacilityMap, or raises LevelFormatError."""
     rows = [line.rstrip() for line in text.strip().splitlines()]
     if not rows or not rows[0]:
-        raise LevelFormatError("Le niveau est vide.")
+        raise LevelFormatError("The level is empty.")
     _check_rectangular(rows)
     _check_known_tiles(rows)
     keycard_cell = _find_optional(rows, KEYCARD)
     security_door_cells = tuple(_cells_with(rows, SECURITY_DOOR))
     if security_door_cells and keycard_cell is None:
         raise LevelFormatError(
-            f"Le niveau contient une porte de sécurité '{SECURITY_DOOR}' "
-            f"mais aucune carte d'accès '{KEYCARD}' : la partie serait impossible."
+            f"The level has a security door '{SECURITY_DOOR}' "
+            f"but no keycard '{KEYCARD}': the game could not be won."
         )
     door_cells = tuple(_cells_with(rows, DOOR))
     _check_doors_fill_an_opening(rows, door_cells)
@@ -166,7 +166,7 @@ def _check_rectangular(rows: list[str]) -> None:
     for number, line in enumerate(rows, start=1):
         if len(line) != expected:
             raise LevelFormatError(
-                f"La ligne {number} fait {len(line)} caractères au lieu de {expected}."
+                f"Line {number} is {len(line)} characters long instead of {expected}."
             )
 
 
@@ -175,7 +175,7 @@ def _check_known_tiles(rows: list[str]) -> None:
         for col, char in enumerate(line, start=1):
             if char not in KNOWN_TILES:
                 raise LevelFormatError(
-                    f"Caractère inconnu '{char}' ligne {number}, colonne {col}."
+                    f"Unknown character '{char}' on line {number}, column {col}."
                 )
 
 
@@ -183,36 +183,36 @@ def _find_unique(rows: list[str], tile: str) -> Cell:
     found = _cells_with(rows, tile)
     if len(found) != 1:
         raise LevelFormatError(
-            f"Le niveau doit contenir exactement un '{tile}' (trouvé : {len(found)})."
+            f"The level must contain exactly one '{tile}' (found: {len(found)})."
         )
     return found[0]
 
 
 def _find_optional(rows: list[str], tile: str) -> Cell | None:
-    """La case du symbole s'il est présent une fois, None s'il est absent."""
+    """The symbol's cell if it appears once, None if it is absent."""
     found = _cells_with(rows, tile)
     if len(found) > 1:
         raise LevelFormatError(
-            f"Le niveau contient au plus un '{tile}' (trouvé : {len(found)})."
+            f"The level contains at most one '{tile}' (found: {len(found)})."
         )
     return found[0] if found else None
 
 
 def _check_doors_fill_an_opening(rows: list[str], doors: tuple[Cell, ...]) -> None:
-    """Une porte doit boucher une ouverture d'une case : un mur de chaque côté."""
+    """A door must fill a one-cell opening: a wall on each side."""
     for row, col in doors:
         between_walls = (
             _tile(rows, row, col - 1) == WALL and _tile(rows, row, col + 1) == WALL
         ) or (_tile(rows, row - 1, col) == WALL and _tile(rows, row + 1, col) == WALL)
         if not between_walls:
             raise LevelFormatError(
-                f"La porte '{DOOR}' ligne {row + 1}, colonne {col + 1} "
-                "doit être entre deux murs, dans une ouverture d'une case."
+                f"The door '{DOOR}' on line {row + 1}, column {col + 1} "
+                "must sit between two walls, in a one-cell opening."
             )
 
 
 def _tile(rows: list[str], row: int, col: int) -> str:
-    """Le symbole d'une case ; hors de la carte, c'est un mur."""
+    """The symbol of a cell; outside the map, it is a wall."""
     if 0 <= row < len(rows) and 0 <= col < len(rows[0]):
         return rows[row][col]
     return WALL
