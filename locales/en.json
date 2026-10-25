@@ -38,12 +38,14 @@
   "exit.locked": "Locked. Without power, the door won't open.",
   "exit.open": "5:58 a.m. You hand in your badge.",
   "code_note.title": "Note from Daniel Morel",
-  "code_note.text": "If you're reading this, the power is out and the B doors are open.\nThere's a spare fuse in the storeroom, to the north-east.\nIt's locked: I left my keycard in the maintenance room, to the south-west.\nFuse box code: 4 7 1.\nDon't run unless you have to. It hears.\nHand in your badge on time.\n— D. M.",
+  "code_note.text": "If you're reading this, the power is out and the B doors are open.\nThere's a spare fuse in the storeroom, to the north-east.\nIt's locked: I left my keycard in the maintenance room, to the south-west.\nFuse box code: 4 7 _. The last digit is in my journal, south-east wing.\nDon't run unless you have to. It hears.\nHand in your badge on time.\n— D. M.",
   "keycard.prompt": "Pick up the keycard",
   "keycard.message": "D. Morel's keycard collected.",
   "door.prompt": "Open the security door",
   "door.locked": "Locked. The reader wants a keycard.",
   "door.open": "Beep. Keycard accepted, the door opens.",
   "pause.title": "PAUSE",
-  "pause.hint": "[Esc] Resume    [Q] Quit"
+  "pause.hint": "[Esc] Resume    [Q] Quit",
+  "panel.code_incomplete": "4, 7... The last digit of the code is missing.",
+  "objective.find_code_end": "Find the last digit of the code."
 }

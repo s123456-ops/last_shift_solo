@@ -13,7 +13,7 @@ from core.interactables import (
     Pickup,
     PowerPanel,
 )
-from core.inventory import FUSE_ITEM, KEYCARD_ITEM, PANEL_CODE
+from core.inventory import CODE_END, CODE_START, FUSE_ITEM, KEYCARD_ITEM
 from core.player import Player
 from core.stamina import Stamina
 
@@ -107,8 +107,8 @@ def test_pickup_adds_the_item_to_the_inventory():
 
 def test_reading_the_code_note_teaches_the_code():
     player = make_player_with_low_battery()
-    Note((1, 1), "Note de Morel", "Code : 4 7 1", grants=PANEL_CODE).interact(player)
-    assert player.inventory.has(PANEL_CODE)
+    Note((1, 1), "Note de Morel", "Code : 4 7 1", grants=CODE_START).interact(player)
+    assert player.inventory.has(CODE_START)
 
 
 def test_panel_refuses_without_a_fuse():
@@ -129,7 +129,8 @@ def test_panel_refuses_without_the_code():
 def test_panel_restores_power_with_fuse_and_code():
     player = make_player_with_low_battery()
     player.inventory.add(FUSE_ITEM)
-    player.inventory.add(PANEL_CODE)
+    player.inventory.add(CODE_START)
+    player.inventory.add(CODE_END)
     facility = Facility()
     PowerPanel((1, 1), facility).interact(player)
     assert facility.power_on
@@ -179,3 +180,14 @@ def test_keycard_is_kept_for_the_next_door():
     LockedDoor((3, 3)).interact(player)
     LockedDoor((5, 5)).interact(player)
     assert player.inventory.has(KEYCARD_ITEM)
+
+
+def test_panel_refuses_with_half_of_the_code():
+    player = make_player_with_low_battery()
+    player.inventory.add(FUSE_ITEM)
+    player.inventory.add(CODE_START)
+    facility = Facility()
+    message = PowerPanel((1, 1), facility).interact(player)
+    assert not facility.power_on
+    assert "dernier chiffre" in message
+    assert player.inventory.has(FUSE_ITEM)  # le fusible n'est pas gaspillé
