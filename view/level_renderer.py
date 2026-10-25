@@ -10,6 +10,7 @@ from panda3d.core import TransparencyAttrib
 from ursina import Entity, Vec3, color, destroy
 
 from core.level import Cell, FacilityMap
+from core.props import Prop
 from core.signs import Sign
 from core.texts import current_language
 from view.abandon import ceiling_holes, scatter_debris, wall_textures
@@ -23,6 +24,7 @@ from view.model_loader import (
     ModelSpec,
     place_model,
 )
+from view.props import CATALOG
 
 WALL_HEIGHT = 3.0
 # Textures générées par tools/make_textures.py, rangées dans assets/textures/.
@@ -83,6 +85,7 @@ DEBRIS_LAYER = 0.0005
 FALLEN_TILE_HEIGHT = 0.04  # au-dessus des autres débris
 CABLE_COLOR = color.rgb32(26, 26, 26)
 CABLE_THICKNESS = 0.025
+PROP_COLLIDER = (0.9, 1.5, 0.9)  # le volume qui arrête le joueur, par case
 DOOR_OPEN_ANGLE = 95  # degrés : la porte ouverte se rabat presque contre le mur
 
 
@@ -95,8 +98,10 @@ class LevelRenderer:
         wall_height: float = WALL_HEIGHT,
         app=None,
         signs: list[Sign] | tuple[Sign, ...] = (),
+        props: list[Prop] | tuple[Prop, ...] = (),
     ) -> None:
         self._level = level
+        self._props = tuple(props)
         self._signs = tuple(signs)
         self._sign_entities: list[tuple[Sign, Entity]] = []
         self._app = app  # sans application, pas de modèles 3D : des blocs de couleur
@@ -111,6 +116,7 @@ class LevelRenderer:
         self._build_debris()
         self._build_ceiling_damage()
         self._build_signs()
+        self._build_props()
         self._build_items()
         self._build_doors()
 
@@ -278,6 +284,35 @@ class LevelRenderer:
             )
         )
         decal.setTransparency(TransparencyAttrib.MAlpha)
+
+    def _build_props(self) -> None:
+        """Chaque meuble est assemblé de blocs, puis fondu en un seul objet 3D."""
+        for prop in self._props:
+            d_row, d_col = prop.facing
+            holder = Entity(
+                position=cell_to_world(prop.anchor),
+                rotation_y=math.degrees(
+                    math.atan2(d_col, -d_row)
+                ),  # face à sa direction
+            )
+            for part in CATALOG[prop.kind]:
+                Entity(
+                    parent=holder,
+                    model="cube",
+                    position=part.center,
+                    scale=part.size,
+                    color=color.rgb32(*part.color),
+                )
+            holder.combine()  # un seul maillage par meuble : bien plus léger à afficher
+            make_lit(holder)
+            for cell in prop.cells:  # le joueur bute sur les cases occupées
+                Entity(
+                    model="cube",
+                    position=cell_to_world(cell, PROP_COLLIDER[1] / 2),
+                    scale=PROP_COLLIDER,
+                    collider="box",
+                    visible=False,
+                )
 
     def _build_signs(self) -> None:
         """Chaque panneau est collé sur la face du mur, tourné vers le couloir."""

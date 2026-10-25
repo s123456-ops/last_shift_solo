@@ -1,0 +1,68 @@
+# Mobilier du niveau 1 : ligne colonne type direction
+# (direction = le côté vers lequel le meuble est tourné ; un meuble long
+#  occupe aussi la case à sa droite, vue de face)
+
+# Poste de garde
+1 2 guard_desk S
+4 1 filing_cabinet E
+
+# Hall d'accueil
+1 10 vending_machine S
+5 11 bench N
+
+# Réserve
+1 22 wall_rack S
+5 21 crate_stack N
+5 23 crate N
+
+# Bureau du Dr Saunier
+2 36 office_desk O
+1 31 filing_cabinet S
+3 34 chair N
+
+# Cellule 3
+1 40 cell_bed S
+1 43 toilet O
+5 43 sink O
+
+# Maintenance
+10 8 workbench S
+15 8 wall_rack N
+10 1 crate S
+
+# Salle de repos
+11 19 vending_machine O
+12 15 break_table N
+12 14 chair E
+12 16 chair O
+
+# Infirmerie
+10 23 hospital_bed S
+10 27 hospital_bed S
+12 23 gurney E
+
+# Laboratoire C
+10 37 lab_bench S
+10 40 lab_bench S
+15 32 specimen_tank N
+15 34 specimen_tank N
+15 36 specimen_tank N
+12 40 gurney N
+
+# Vestiaires
+22 3 bench N
+22 10 bench N
+
+# Archives
+20 25 wall_rack S
+20 19 wall_rack S
+22 21 archive_rack N
+22 24 archive_rack N
+22 27 archive_rack N
+
+# Quai de chargement
+20 31 crate_stack S
+21 31 crate E
+23 31 crate E
+23 33 crate_stack N
+20 40 crate S
