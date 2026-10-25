@@ -10,9 +10,11 @@ Restore the power and reach the exit before it finds you: find the fuse, piece
 together the generator code, open the security doors, and hide in the lockers
 when you hear it coming.
 
-This repository is the **solo version** of a group project for the *Clean Code*
-course (Master 2 Big Data, Business Intelligence & Analytics, Université Sorbonne
-Paris Nord). It focuses on readable, tested, object-oriented Python.
+I built this game for fun, out of a long-standing love for horror games:
+the slow dread of *Silent Hill*, the helplessness of *Outlast*, the low-poly
+charm of the PS1 era. It is also my playground for writing clean, tested,
+object-oriented Python, where every game rule can be checked without opening
+a window.
 
 ## Features
 
@@ -124,6 +126,20 @@ python -m tools.make_sounds        # water drips
 pip install numpy soundfile
 python -m tools.make_music         # ambient music
 ```
+
+## Roadmap
+
+**Player metrics.** The next big feature: record every run (duration, difficulty,
+the path taken, where the player died, how long they hid, how much they relied
+on the flashlight and the map) and turn it into analysis:
+
+- a heatmap of deaths and hiding spots over the building plan;
+- completion rates and average run time per difficulty;
+- the moments where players get lost or give up.
+
+The goal is to tune the game with data rather than guesswork: if most players
+die in the same corridor, that corridor needs another locker. The core already
+makes this easy, since every game event goes through `GameSession`.
 
 ## Credits
 
