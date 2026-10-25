@@ -6,7 +6,7 @@ Module indépendant du moteur de jeu.
 from abc import ABC, abstractmethod
 
 from core.facility import Facility
-from core.inventory import FUSE_ITEM, KEYCARD_ITEM, PANEL_CODE
+from core.inventory import CODE_END, CODE_START, FUSE_ITEM, KEYCARD_ITEM
 from core.level import Cell
 from core.player import Player
 from core.texts import tr
@@ -151,8 +151,12 @@ class PowerPanel(Interactable):
             return tr("panel.powered")
         if not player.inventory.has(FUSE_ITEM):
             return tr("panel.no_fuse")
-        if not player.inventory.has(PANEL_CODE):
+        if not player.inventory.has(CODE_START):
             return tr("panel.no_code")
+        if not player.inventory.has(CODE_START):
+            return tr("panel.no_code")
+        if not player.inventory.has(CODE_END):
+            return tr("panel.code_incomplete")
         player.inventory.remove(FUSE_ITEM)
         self._facility.restore_power()
         return tr("panel.restored")

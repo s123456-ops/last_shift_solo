@@ -1,7 +1,8 @@
 """Inventaire du joueur : objets et connaissances. Module indépendant du moteur de jeu."""
 
 FUSE_ITEM = "fusible"
-PANEL_CODE = "code du tableau"
+CODE_START = "code du tableau"
+CODE_END = "fin du code"
 KEYCARD_ITEM = "carte d'accès"
 
 

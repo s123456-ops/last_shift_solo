@@ -1,7 +1,7 @@
 from core.facility import Facility
 from core.flashlight import Flashlight
 from core.interactables import ExitDoor, Interactions, Note, Pickup, PowerPanel
-from core.inventory import FUSE_ITEM, PANEL_CODE
+from core.inventory import CODE_END, CODE_START, FUSE_ITEM
 from core.level import parse_level
 from core.monster import Monster
 from core.player import Player
@@ -27,7 +27,8 @@ def make_session(**options):
     interactions = Interactions(
         [
             Pickup((4, 2), FUSE_ITEM, "Ramasser le fusible", "Fusible récupéré."),
-            Note((4, 6), "Note", "Code : 4 7 1", grants=PANEL_CODE),
+            Note((4, 6), "Note", "Code : 4 7 1", grants=CODE_START),
+            Note((4, 5), "Journal", "Dernier chiffre : 3", grants=CODE_END),
             PowerPanel((4, 3), facility),
             ExitDoor((4, 1), facility),
         ]
@@ -74,7 +75,8 @@ def test_nothing_changes_once_the_game_is_over():
 def test_full_objective_sequence_wins_the_game():
     session = make_session()
     session.interact((4, 2))  # fusible
-    session.interact((4, 6))  # note : le code
+    session.interact((4, 6))  # note : début du code
+    session.interact((4, 5))  # journal : fin du code
     session.interact((4, 3))  # tableau électrique
     session.interact((4, 1))  # porte de sortie
     assert session.status is GameStatus.WON
@@ -90,6 +92,15 @@ def test_power_on_reflects_the_repaired_panel():
     session = make_session()
     assert not session.power_on
     session.interact((4, 2))  # fusible
-    session.interact((4, 6))  # code
+    session.interact((4, 6))  # note : début du code
+    session.interact((4, 5))  # journal : fin du code
     session.interact((4, 3))  # tableau
     assert session.power_on
+
+
+def test_half_of_the_code_does_not_restore_power():
+    session = make_session()
+    session.interact((4, 2))  # fusible
+    session.interact((4, 6))  # note : début du code seulement
+    session.interact((4, 3))  # tableau
+    assert not session.power_on

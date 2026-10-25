@@ -25,7 +25,7 @@ from core.interactables import (
     Pickup,
     PowerPanel,
 )
-from core.inventory import FUSE_ITEM, KEYCARD_ITEM, PANEL_CODE
+from core.inventory import CODE_END, CODE_START, FUSE_ITEM, KEYCARD_ITEM
 from core.level import LevelFormatError, load_level
 from core.monster import Monster
 from core.player import Player
@@ -63,6 +63,7 @@ PEACEFUL_MODE = False  # True pour tester sans le monstre
 CATCH_DISTANCE = 0.9
 START_INPUT_GRACE = 0.5  # secondes : la touche qui a fermé l'intro est ignorée
 MONSTER_PATROL = [(14, 26), (7, 22), (11, 15), (12, 4), (7, 8), (2, 15)]
+CODE_END_DOCUMENT = (15, 28)  # le journal de Daniel Morel donne le dernier chiffre
 
 TITLE_CAMERA_START = (7, 2)  # début du couloir principal, à l'ouest
 TITLE_CAMERA_END = (7, 18)  # la caméra s'arrête avant d'atteindre la silhouette
@@ -258,14 +259,26 @@ def build_session(level, language: str) -> GameSession:
             level.note_cell,
             tr("code_note.title"),
             tr("code_note.text"),
-            grants=PANEL_CODE,
+            grants=CODE_START,
         ),
         PowerPanel(level.power_panel_cell, facility),
         ExitDoor(level.exit_cell, facility),
     ]
     items += [BatteryPickup(cell, BATTERY_CHARGE) for cell in level.battery_cells]
     items += [HidingSpot(cell) for cell in level.hiding_spot_cells]
-    items += [Note(doc.cell, doc.title, doc.text) for doc in documents.values()]
+    if CODE_END_DOCUMENT not in documents:
+        raise ValueError(
+            f"Aucun document en {CODE_END_DOCUMENT} : le code serait incomplet."
+        )
+    items += [
+        Note(
+            doc.cell,
+            doc.title,
+            doc.text,
+            grants=CODE_END if doc.cell == CODE_END_DOCUMENT else None,
+        )
+        for doc in documents.values()
+    ]
     items += doors
     if level.keycard_cell is not None:
         items.append(
