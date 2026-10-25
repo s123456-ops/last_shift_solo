@@ -18,6 +18,7 @@ from core.facility import Facility
 from core.flashlight import Flashlight
 from core.interactables import (
     BatteryPickup,
+    Door,
     ExitDoor,
     HidingSpot,
     Interactions,
@@ -155,6 +156,8 @@ class GameController(Entity):
         )
         self._session.update(time.dt, wants_to_run=is_moving and held_keys["shift"])
         self._refresh_player_view()
+        for _ in self._renderer.sync_doors(self._session.doors):
+            self._audio.on_locker()  # grincement métallique d'une porte qui bouge
         self._update_monster()
         self._update_audio(is_moving)
 
@@ -206,7 +209,7 @@ class GameController(Entity):
             return
         if result.item.is_readable:
             self._open_document(result.message)
-        else:
+        elif result.message:
             self._hud.show_message(result.message)
         if result.item.is_consumed:
             self._renderer.remove_item(result.item.cell)
@@ -290,7 +293,8 @@ def build_session(
     """Assemble le noyau : joueur, monstre, bâtiment et objets du niveau."""
     facility = Facility()
     documents = load_documents(DOCUMENTS_PATH.format(language=language), level)
-    doors = [LockedDoor(cell) for cell in level.security_door_cells]
+    security_doors = [LockedDoor(cell) for cell in level.security_door_cells]
+    doors = [Door(cell) for cell in level.door_cells]
     items = [
         Pickup(level.fuse_cell, FUSE_ITEM, tr("fuse.prompt"), tr("fuse.message")),
         Note(
@@ -317,7 +321,7 @@ def build_session(
         )
         for doc in documents.values()
     ]
-    items += doors
+    items += security_doors + doors
     if level.keycard_cell is not None:
         items.append(
             Pickup(
@@ -331,8 +335,11 @@ def build_session(
         Flashlight(FLASHLIGHT_CAPACITY, difficulty.flashlight_drain),
         Stamina(STAMINA_CAPACITY, STAMINA_DRAIN_PER_SECOND, STAMINA_REGEN_PER_SECOND),
     )
+    # Les portes de sécurité arrêtent toujours le monstre ; les portes normales,
+    # seulement s'il ne sait pas les ouvrir (facile et normal).
+    barriers = security_doors + ([] if difficulty.monster_opens_doors else doors)
     monster = Monster(
-        MapWithDoors(level, doors),
+        MapWithDoors(level, barriers),
         level.monster_start,
         MONSTER_PATROL,
         hearing_range=difficulty.monster_hearing,
@@ -344,12 +351,14 @@ def build_session(
         facility,
         grace_period=difficulty.grace_period,
         peaceful=peaceful,
+        doors=doors,
+        monster_opens_doors=difficulty.monster_opens_doors,
     )
 
 
-def build_world(level) -> tuple[LevelRenderer, Lighting]:
+def build_world(app, level) -> tuple[LevelRenderer, Lighting]:
     """Le décor et l'éclairage, partagés par l'écran titre et la partie."""
-    renderer = LevelRenderer(level)
+    renderer = LevelRenderer(level, app=app)
     renderer.build()
     lighting = Lighting()
     lighting.setup()
@@ -420,7 +429,7 @@ def main() -> None:
 
     app = Ursina()
     window.color = color.black
-    renderer, lighting = build_world(level)
+    renderer, lighting = build_world(app, level)
     settings = default_settings()
     settings.brightness.bind(lighting.set_brightness)
     settings.volume.bind(lambda volume: set_master_volume(app, volume))

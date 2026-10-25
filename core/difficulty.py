@@ -18,6 +18,7 @@ class Difficulty:
     flashlight_drain: float  # batterie perdue par seconde (sur 100)
     plan_shows_keycard: bool  # un indice pour les débutants
     plan_shows_player: bool  # sans « Vous êtes ici », il faut se repérer seul
+    monster_opens_doors: bool = False  # sinon, une porte fermée l'arrête
 
     def __post_init__(self) -> None:
         numbers = (
@@ -66,5 +67,6 @@ HARD = Difficulty(
     flashlight_drain=100 / 35,  # 35 secondes d'éclairage
     plan_shows_keycard=False,
     plan_shows_player=False,
+    monster_opens_doors=True,
 )
 DIFFICULTIES = (EASY, NORMAL, HARD)

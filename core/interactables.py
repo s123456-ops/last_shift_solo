@@ -41,6 +41,10 @@ class Interactable(ABC):
         """Vrai si l'interaction ouvre un texte à lire, affiché en grand."""
         return False
 
+    def reachable_from(self, cell: Cell) -> bool:
+        """Le joueur, sur cette case, peut-il utiliser l'objet ? Oui, par défaut."""
+        return True
+
     @property
     @abstractmethod
     def prompt(self) -> str:
@@ -189,6 +193,36 @@ class LockedDoor(Interactable):
         return tr("door.open")
 
 
+class Door(Interactable):
+    """Une porte normale : E l'ouvre, E la referme. Elle n'est jamais consommée.
+
+    Fermée, elle arrête le monstre, sauf en difficile où il l'ouvre lui-même.
+    """
+
+    def __init__(self, cell: Cell) -> None:
+        super().__init__(cell)
+        self._open = False
+
+    @property
+    def is_closed(self) -> bool:
+        return not self._open
+
+    @property
+    def prompt(self) -> str:
+        return tr("door.close_prompt") if self._open else tr("door.open_prompt")
+
+    def reachable_from(self, cell: Cell) -> bool:
+        return cell != self.cell  # on ne referme pas une porte sur soi-même
+
+    def interact(self, player: Player) -> str:
+        self._open = not self._open
+        return ""  # le bruit et le mouvement de la porte suffisent
+
+    def open(self) -> None:
+        """Ouverture sans joueur : c'est le monstre qui pousse la porte."""
+        self._open = True
+
+
 class ExitDoor(Interactable):
     """La porte de sortie, verrouillée tant que le courant n'est pas rétabli."""
 
@@ -222,6 +256,6 @@ class Interactions:
         row, col = cell
         for d_row, d_col in REACH:
             item = self._items.get((row + d_row, col + d_col))
-            if item is not None and not item.is_consumed:
+            if item is not None and not item.is_consumed and item.reachable_from(cell):
                 return item
         return None

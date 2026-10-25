@@ -1,6 +1,6 @@
 from core.doors import MapWithDoors
 from core.flashlight import Flashlight
-from core.interactables import LockedDoor
+from core.interactables import Door, LockedDoor
 from core.inventory import KEYCARD_ITEM
 from core.level import parse_level
 from core.monster import Monster, Situation
@@ -74,3 +74,14 @@ def test_monster_sees_through_the_open_door():
     monster = Monster(building, start=(2, 6), patrol_route=[(2, 6)])
     situation = Situation(player_cell=(2, 2), player_running=False, flashlight_on=True)
     assert monster.perceives(situation)
+
+
+def test_closed_normal_door_blocks_the_monster():
+    door = Door(DOOR_CELL)
+    building = MapWithDoors(LEVEL, [door])
+    assert Pathfinder(building).find_path((2, 7), (2, 1)) == []
+
+
+def test_monster_can_leave_a_door_closed_on_him():
+    building, _ = make_map()
+    assert Pathfinder(building).find_path(DOOR_CELL, (2, 7))

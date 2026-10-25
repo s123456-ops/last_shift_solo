@@ -21,6 +21,7 @@ EMERGENCY_LIGHT = "L"
 HIDING_SPOT = "H"
 KEYCARD = "K"
 SECURITY_DOOR = "S"
+DOOR = "O"  # porte normale, qu'on ouvre et referme avec E
 KNOWN_TILES = {
     WALL,
     FLOOR,
@@ -36,6 +37,7 @@ KNOWN_TILES = {
     HIDING_SPOT,
     KEYCARD,
     SECURITY_DOOR,
+    DOOR,
 }
 
 
@@ -73,6 +75,7 @@ class FacilityMap:
     hiding_spot_cells: tuple[Cell, ...]
     keycard_cell: Cell | None = None  # facultative : un niveau peut s'en passer
     security_door_cells: tuple[Cell, ...] = ()
+    door_cells: tuple[Cell, ...] = ()
 
     @property
     def height(self) -> int:
@@ -129,6 +132,8 @@ def parse_level(text: str) -> FacilityMap:
             f"Le niveau contient une porte de sécurité '{SECURITY_DOOR}' "
             f"mais aucune carte d'accès '{KEYCARD}' : la partie serait impossible."
         )
+    door_cells = tuple(_cells_with(rows, DOOR))
+    _check_doors_fill_an_opening(rows, door_cells)
     return FacilityMap(
         rows=tuple(rows),
         player_start=_find_unique(rows, PLAYER_START),
@@ -143,6 +148,7 @@ def parse_level(text: str) -> FacilityMap:
         hiding_spot_cells=tuple(_cells_with(rows, HIDING_SPOT)),
         keycard_cell=keycard_cell,
         security_door_cells=security_door_cells,
+        door_cells=door_cells,
     )
 
 
@@ -190,3 +196,23 @@ def _find_optional(rows: list[str], tile: str) -> Cell | None:
             f"Le niveau contient au plus un '{tile}' (trouvé : {len(found)})."
         )
     return found[0] if found else None
+
+
+def _check_doors_fill_an_opening(rows: list[str], doors: tuple[Cell, ...]) -> None:
+    """Une porte doit boucher une ouverture d'une case : un mur de chaque côté."""
+    for row, col in doors:
+        between_walls = (
+            _tile(rows, row, col - 1) == WALL and _tile(rows, row, col + 1) == WALL
+        ) or (_tile(rows, row - 1, col) == WALL and _tile(rows, row + 1, col) == WALL)
+        if not between_walls:
+            raise LevelFormatError(
+                f"La porte '{DOOR}' ligne {row + 1}, colonne {col + 1} "
+                "doit être entre deux murs, dans une ouverture d'une case."
+            )
+
+
+def _tile(rows: list[str], row: int, col: int) -> str:
+    """Le symbole d'une case ; hors de la carte, c'est un mur."""
+    if 0 <= row < len(rows) and 0 <= col < len(rows[0]):
+        return rows[row][col]
+    return WALL

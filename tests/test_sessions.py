@@ -1,6 +1,14 @@
+from core.doors import MapWithDoors
 from core.facility import Facility
 from core.flashlight import Flashlight
-from core.interactables import ExitDoor, Interactions, Note, Pickup, PowerPanel
+from core.interactables import (
+    Door,
+    ExitDoor,
+    Interactions,
+    Note,
+    Pickup,
+    PowerPanel,
+)
 from core.inventory import CODE_END, CODE_START, FUSE_ITEM
 from core.level import parse_level
 from core.monster import Monster
@@ -104,3 +112,49 @@ def test_half_of_the_code_does_not_restore_power():
     session.interact((4, 6))  # note : début du code seulement
     session.interact((4, 3))  # tableau
     assert not session.power_on
+
+
+DOOR_LEVEL = parse_level("""
+#########
+#P..#..M#
+#...O...#
+#EFG#..N#
+#########
+""")
+
+
+def make_door_session(monster_opens_doors):
+    door = Door((2, 4))
+    player = Player(
+        Flashlight(capacity=100, drain_per_second=10),
+        Stamina(capacity=100, drain_per_second=10, regen_per_second=5),
+    )
+    barriers = [] if monster_opens_doors else [door]
+    monster = Monster(
+        MapWithDoors(DOOR_LEVEL, barriers), start=(1, 7), patrol_route=[(2, 1)]
+    )
+    session = GameSession(
+        player,
+        monster,
+        Interactions([door]),
+        Facility(),
+        grace_period=0,
+        doors=[door],
+        monster_opens_doors=monster_opens_doors,
+    )
+    return session, door
+
+
+def test_in_hard_mode_the_monster_opens_doors():
+    session, door = make_door_session(monster_opens_doors=True)
+    for _ in range(8):
+        session.next_monster_cell((1, 1))  # le joueur est de l'autre côté
+    assert not door.is_closed
+
+
+def test_otherwise_a_closed_door_stops_the_monster():
+    session, door = make_door_session(monster_opens_doors=False)
+    for _ in range(8):
+        cell = session.next_monster_cell((1, 1))
+    assert door.is_closed
+    assert cell[1] > 4  # il est resté de son côté de la porte

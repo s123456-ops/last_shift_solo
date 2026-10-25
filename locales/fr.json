@@ -82,5 +82,7 @@
   "map.keycard": "Carte d'accès",
   "options.retro": "Style PS1 : {value}",
   "retro.on": "activé",
-  "retro.off": "désactivé"
+  "retro.off": "désactivé",
+  "door.open_prompt": "Ouvrir la porte",
+  "door.close_prompt": "Fermer la porte"
 }

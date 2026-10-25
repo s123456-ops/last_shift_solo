@@ -26,6 +26,8 @@ class ModelSpec:
 MONSTER = ModelSpec(
     Path("assets/monster/monster.bam"), height=2.6, pitch=90, heading=180
 )
+GENERATOR = ModelSpec(Path("assets/models/generator.bam"), height=0.85, pitch=90)
+EXIT_DOOR = ModelSpec(Path("assets/models/exit_door.bam"), height=2.3, pitch=90)
 
 
 def load_model(app, path: Path) -> NodePath:

@@ -82,5 +82,7 @@
   "map.keycard": "Keycard",
   "options.retro": "PS1 style: {value}",
   "retro.on": "on",
-  "retro.off": "off"
+  "retro.off": "off",
+  "door.open_prompt": "Open the door",
+  "door.close_prompt": "Close the door"
 }
