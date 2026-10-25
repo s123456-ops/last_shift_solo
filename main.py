@@ -31,6 +31,7 @@ from core.inventory import CODE_END, CODE_START, FUSE_ITEM, KEYCARD_ITEM
 from core.level import LevelFormatError, load_level
 from core.monster import Monster
 from core.player import Player
+from core.props import MapWithFurniture, PropFormatError, load_props
 from core.session import GameSession, GameStatus
 from core.signs import SignFormatError, load_signs
 from core.stamina import Stamina
@@ -43,6 +44,7 @@ from view.level_renderer import WALL_HEIGHT, LevelRenderer
 from view.lighting import Lighting
 from view.map_screen import MapScreen
 from view.monster_view import MonsterView
+from view.music import Music
 from view.pause_menu import PauseMenu
 from view.retro import set_retro_style
 from view.screens import IntroSequence, TitleScreen
@@ -53,6 +55,7 @@ GAME_LANGUAGE = "en"
 LEVEL_PATH = "levels/level1.txt"
 DOCUMENTS_PATH = "levels/level1_documents.{language}.txt"
 SIGNS_PATH = "levels/level1_signs.txt"
+PROPS_PATH = "levels/level1_props.txt"
 
 FLASHLIGHT_CAPACITY = 100
 BATTERY_CHARGE = 40  # une pile recharge 40 % de la batterie
@@ -98,6 +101,7 @@ class GameController(Entity):
         map_screen: MapScreen,
         settings: PlayerSettings,
         difficulty: Difficulty,
+        music: Music,
     ) -> None:
         super().__init__()
         self._session = session
@@ -109,6 +113,8 @@ class GameController(Entity):
         self._hud = hud
         self._map = map_screen
         self._difficulty = difficulty
+        self._music = music
+        music.set_mood("game")
         self._position_before_hiding = first_person.position
         self._end_shown = False
         self._paused = False
@@ -166,6 +172,7 @@ class GameController(Entity):
             self._audio.on_locker()  # grincement métallique d'une porte qui bouge
         self._update_monster()
         self._update_audio(is_moving)
+        self._music.set_mood("chase" if self._session.monster_is_chasing else "game")
 
     def _move_head(self, is_moving: bool) -> None:
         """Balancement de la tête en marchant, lampe qui tremble à bout de souffle."""
@@ -293,6 +300,7 @@ class GameController(Entity):
         if self._end_shown:
             return
         self._end_shown = True
+        self._music.set_mood("silent")
         self._map.close()
         self._first_person.enabled = False
         won = self._session.status is GameStatus.WON
@@ -304,7 +312,7 @@ class GameController(Entity):
 
 
 def build_session(
-    level, language: str, peaceful: bool, difficulty: Difficulty
+    level, language: str, peaceful: bool, difficulty: Difficulty, props=()
 ) -> GameSession:
     """Assemble le noyau : joueur, monstre, bâtiment et objets du niveau."""
     facility = Facility()
@@ -355,7 +363,7 @@ def build_session(
     # seulement s'il ne sait pas les ouvrir (facile et normal).
     barriers = security_doors + ([] if difficulty.monster_opens_doors else doors)
     monster = Monster(
-        MapWithDoors(level, barriers),
+        MapWithDoors(MapWithFurniture(level, props), barriers),
         level.monster_start,
         MONSTER_PATROL,
         hearing_range=difficulty.monster_hearing,
@@ -372,9 +380,9 @@ def build_session(
     )
 
 
-def build_world(app, level, signs) -> tuple[LevelRenderer, Lighting]:
+def build_world(app, level, signs, props) -> tuple[LevelRenderer, Lighting]:
     """Le décor et l'éclairage, partagés par l'écran titre et la partie."""
-    renderer = LevelRenderer(level, app=app, signs=signs)
+    renderer = LevelRenderer(level, app=app, signs=signs, props=props)
     renderer.build()
     lighting = Lighting()
     lighting.setup()
@@ -391,6 +399,7 @@ def start_game(
     lighting: Lighting,
     settings: PlayerSettings,
     difficulty: Difficulty,
+    music: Music,
 ) -> None:
     """Place le joueur et le monstre, puis lance la partie."""
     first_person = FirstPersonController(position=cell_to_world(level.player_start))
@@ -413,6 +422,7 @@ def start_game(
         MapScreen(level, difficulty),
         settings,
         difficulty,
+        music,
     )
 
 
@@ -434,24 +444,28 @@ def main() -> None:
         level = load_level(LEVEL_PATH)
         # on assemble une première partie pour vérifier les fichiers
         # avant d'ouvrir la fenêtre ; la vraie est créée après le choix du mode
-        build_session(level, language, peaceful=False, difficulty=NORMAL)
         signs = load_signs(SIGNS_PATH, level)
+        props = load_props(PROPS_PATH, level)
+        build_session(level, language, peaceful=False, difficulty=NORMAL, props=props)
     except (
         FileNotFoundError,
         LevelFormatError,
         DocumentFormatError,
         SignFormatError,
+        PropFormatError,
         ValueError,
     ) as error:
         sys.exit(f"Impossible de préparer la partie : {error}")
 
     app = Ursina()
     window.color = color.black
-    renderer, lighting = build_world(app, level, signs)
+    renderer, lighting = build_world(app, level, signs, props)
     settings = default_settings()
     settings.brightness.bind(lighting.set_brightness)
     settings.volume.bind(lambda volume: set_master_volume(app, volume))
     settings.retro.bind(set_retro_style)
+    music = Music(app)
+    music.set_mood("title")
     difficulty = Setting(
         "options.difficulty",
         tuple((choice.name_key, choice) for choice in DIFFICULTIES),
@@ -463,11 +477,12 @@ def main() -> None:
 
     def begin(peaceful: bool) -> None:
         backdrop.stop()
+        music.set_mood("intro")
         chosen = difficulty.value
-        session = build_session(level, current_language(), peaceful, chosen)
+        session = build_session(level, current_language(), peaceful, chosen, props)
         IntroSequence(
             on_finish=lambda: start_game(
-                app, level, session, renderer, lighting, settings, chosen
+                app, level, session, renderer, lighting, settings, chosen, music
             )
         )
 
