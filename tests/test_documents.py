@@ -58,4 +58,4 @@ def test_text_before_first_header_raises():
 def test_shipped_documents_match_shipped_level(language):
     level = load_level("levels/level1.txt")
     documents = load_documents(f"levels/level1_documents.{language}.txt", level)
-    assert len(documents) == 4
+    assert len(documents) == len(level.document_cells)

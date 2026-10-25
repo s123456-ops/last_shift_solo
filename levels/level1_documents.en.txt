@@ -25,3 +25,17 @@ He knows my rounds.
 He walks like someone who has done this job.
 I changed the fuse box code. Last digit: 3.
 Like the cell.
+
+[2, 33] Letter from Dr Saunier, never sent
+Mrs Varenne,
+You were told your son died in an accident on duty.
+That is not true. Thomas is alive, in Sector B, cell 3.
+I no longer know if it is still him.
+I am sorry.
+— H. Saunier
+
+[3, 42] Plate — Cell 3
+SUBJECT 7 — VARENNE, T.
+Lazarus Protocol. Level 4 clearance.
+In case of power failure: do not open.
+He always comes back to his cell.

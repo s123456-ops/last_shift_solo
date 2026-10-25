@@ -59,10 +59,19 @@ STAMINA_REGEN_PER_SECOND = 12  # environ 8 secondes pour se recharger
 MONSTER_PATROL_SPEED = 2  # il rôde, plus lent que votre marche
 MONSTER_CHASE_SPEED = 4  # il fonce : seule la course permet de le distancer
 MONSTER_GRACE_PERIOD = 20  # secondes avant qu'il ne commence à bouger
-PEACEFUL_MODE = False  # True pour tester sans le monstre
 CATCH_DISTANCE = 0.9
 START_INPUT_GRACE = 0.5  # secondes : la touche qui a fermé l'intro est ignorée
-MONSTER_PATROL = [(14, 26), (7, 22), (11, 15), (12, 4), (7, 8), (2, 15)]
+MONSTER_PATROL = [
+    (14, 26),  # sa salle de départ
+    (7, 22),
+    (8, 40),  # couloir de l'aile C
+    (13, 37),  # laboratoire
+    (21, 37),  # quai de chargement
+    (18, 20),  # couloir de service
+    (12, 4),  # salle de maintenance
+    (7, 8),
+    (2, 15),
+]
 CODE_END_DOCUMENT = (15, 28)  # le journal de Daniel Morel donne le dernier chiffre
 
 TITLE_CAMERA_START = (7, 2)  # début du couloir principal, à l'ouest
@@ -248,7 +257,7 @@ class GameController(Entity):
         self._hud.show_end(tr("end.won") if won else tr("end.lost"), won)
 
 
-def build_session(level, language: str) -> GameSession:
+def build_session(level, language: str, peaceful: bool) -> GameSession:
     """Assemble le noyau : joueur, monstre, bâtiment et objets du niveau."""
     facility = Facility()
     documents = load_documents(DOCUMENTS_PATH.format(language=language), level)
@@ -300,7 +309,7 @@ def build_session(level, language: str) -> GameSession:
         Interactions(items),
         facility,
         grace_period=MONSTER_GRACE_PERIOD,
-        peaceful=PEACEFUL_MODE,
+        peaceful=peaceful,
     )
 
 
@@ -341,15 +350,21 @@ def parse_arguments() -> argparse.Namespace:
         default=GAME_LANGUAGE,
         help=f"langue du jeu (par défaut : {GAME_LANGUAGE})",
     )
+    parser.add_argument(
+        "--peaceful",
+        action="store_true",
+        help="mode paisible : le monstre ne bouge pas (pour tester la carte)",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
-    language = parse_arguments().lang
+    arguments = parse_arguments()
+    language = arguments.lang
     try:
         set_language(language)
         level = load_level(LEVEL_PATH)
-        session = build_session(level, language)
+        session = build_session(level, language, arguments.peaceful)
     except (
         FileNotFoundError,
         LevelFormatError,
