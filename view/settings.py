@@ -24,6 +24,7 @@ VOLUME_CHOICES: tuple[Choice, ...] = (  # volume général, de 0 à 1
     ("volume.medium", 0.7),
     ("volume.high", 1.0),
 )
+RETRO_CHOICES = (("retro.on", True), ("retro.off", False))  # style PS1
 SENSITIVITY_CHOICES: tuple[Choice, ...] = (  # vitesse de la caméra à la souris
     ("sensitivity.low", 15),
     ("sensitivity.normal", 25),
@@ -78,9 +79,10 @@ class PlayerSettings:
     brightness: Setting
     volume: Setting
     sensitivity: Setting
+    retro: Setting
 
     def all(self) -> tuple[Setting, ...]:
-        return (self.brightness, self.volume, self.sensitivity)
+        return (self.brightness, self.volume, self.sensitivity, self.retro)
 
 
 def default_settings() -> PlayerSettings:
@@ -88,4 +90,5 @@ def default_settings() -> PlayerSettings:
         brightness=Setting("options.brightness", BRIGHTNESS_CHOICES, default=1),
         volume=Setting("options.volume", VOLUME_CHOICES, default=3),
         sensitivity=Setting("options.sensitivity", SENSITIVITY_CHOICES, default=1),
+        retro=Setting("options.retro", RETRO_CHOICES, default=0),
     )

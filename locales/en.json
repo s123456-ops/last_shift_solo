@@ -79,5 +79,8 @@
   "difficulty.easy": "easy",
   "difficulty.normal": "normal",
   "difficulty.hard": "hard",
-  "map.keycard": "Keycard"
+  "map.keycard": "Keycard",
+  "options.retro": "PS1 style: {value}",
+  "retro.on": "on",
+  "retro.off": "off"
 }

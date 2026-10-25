@@ -41,6 +41,7 @@ from view.lighting import Lighting
 from view.map_screen import MapScreen
 from view.monster_view import MonsterView
 from view.pause_menu import PauseMenu
+from view.retro import set_retro_style
 from view.screens import IntroSequence, TitleScreen
 from view.settings import PlayerSettings, Setting, default_settings
 from view.title_backdrop import TitleBackdrop
@@ -423,6 +424,7 @@ def main() -> None:
     settings = default_settings()
     settings.brightness.bind(lighting.set_brightness)
     settings.volume.bind(lambda volume: set_master_volume(app, volume))
+    settings.retro.bind(set_retro_style)
     difficulty = Setting(
         "options.difficulty",
         tuple((choice.name_key, choice) for choice in DIFFICULTIES),

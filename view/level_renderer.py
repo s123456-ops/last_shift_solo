@@ -5,13 +5,18 @@ Ce module affiche ; il ne contient aucune règle du jeu.
 
 from dataclasses import dataclass
 
-from ursina import Entity, color, destroy
+from ursina import Entity, Vec3, color, destroy
 
 from core.level import Cell, FacilityMap
 from view.coords import cell_to_world
+from view.furniture import DESK, SHELF, FurnitureStyle, place_furniture
 from view.lighting import make_lit
 
 WALL_HEIGHT = 3.0
+# Textures générées par tools/make_textures.py, rangées dans assets/textures/.
+FLOOR_TEXTURE = "floor_tiles"
+WALL_TEXTURE = "wall_tiles"  # dessinée pour un mur entier : 1 case de large, 3 de haut
+CEILING_TEXTURE = "ceiling_tiles"
 
 
 @dataclass(frozen=True)
@@ -22,16 +27,17 @@ class ItemStyle:
     scale: tuple[float, float, float]
     height: float
     solid: bool = False  # un objet solide bloque le joueur
+    support: FurnitureStyle | None = None  # le meuble sur lequel l'objet est posé
 
 
-FUSE_STYLE = ItemStyle(color.yellow, (0.25, 0.25, 0.25), 1.0)
+FUSE_STYLE = ItemStyle(color.yellow, (0.25, 0.25, 0.25), 1.0, support=SHELF)
 POWER_PANEL_STYLE = ItemStyle(color.azure, (0.8, 1.2, 0.3), 1.4)
-NOTE_STYLE = ItemStyle(color.white, (0.3, 0.02, 0.4), 0.9)
-BATTERY_STYLE = ItemStyle(color.orange, (0.15, 0.3, 0.15), 0.9)
+NOTE_STYLE = ItemStyle(color.white, (0.3, 0.02, 0.4), 0.9, support=DESK)
+BATTERY_STYLE = ItemStyle(color.orange, (0.15, 0.3, 0.15), 0.9, support=SHELF)
 EXIT_STYLE = ItemStyle(color.green, (0.9, 2.4, 0.9), 1.2)
-DOCUMENT_STYLE = ItemStyle(color.light_gray, (0.25, 0.02, 0.32), 0.9)
+DOCUMENT_STYLE = ItemStyle(color.light_gray, (0.25, 0.02, 0.32), 0.9, support=DESK)
 LOCKER_STYLE = ItemStyle(color.dark_gray, (0.9, 2.2, 0.9), 1.1, solid=True)
-KEYCARD_STYLE = ItemStyle(color.cyan, (0.3, 0.02, 0.2), 0.9)
+KEYCARD_STYLE = ItemStyle(color.cyan, (0.3, 0.02, 0.2), 0.9, support=DESK)
 SECURITY_DOOR_STYLE = ItemStyle(color.brown, (1, 2.4, 1), 1.2, solid=True)
 
 
@@ -62,9 +68,9 @@ class LevelRenderer:
                 model="plane",
                 scale=(width, 1, height),
                 position=cell_to_world(center_cell),
-                texture="white_cube",
-                texture_scale=(width, height),
-                color=color.gray,
+                texture=FLOOR_TEXTURE,
+                texture_scale=(width, height),  # la texture se répète une fois par case
+                color=color.white,
                 collider="box",
             )
         )
@@ -74,7 +80,9 @@ class LevelRenderer:
                 scale=(width, 1, height),
                 position=cell_to_world(center_cell, self._wall_height),
                 rotation_x=180,
-                color=color.dark_gray,
+                texture=CEILING_TEXTURE,
+                texture_scale=(width, height),
+                color=color.white,
             )
         )
 
@@ -85,8 +93,8 @@ class LevelRenderer:
                     model="cube",
                     position=cell_to_world(cell, self._wall_height / 2),
                     scale=(1, self._wall_height, 1),
-                    texture="white_cube",
-                    color=color.light_gray,
+                    texture=WALL_TEXTURE,
+                    color=color.white,
                     collider="box",
                 )
             )
@@ -108,14 +116,24 @@ class LevelRenderer:
         if level.keycard_cell is not None:
             placements.append((level.keycard_cell, KEYCARD_STYLE))
         for cell, style in placements:
-            self._items[cell] = self._spawn_item(cell, style)
+            self._items[cell] = self._spawn_item(
+                style, self._item_position(cell, style)
+            )
+
+    def _item_position(self, cell: Cell, style: ItemStyle) -> Vec3:
+        """Sur son meuble s'il en a un (collé au mur), sinon au centre de la case."""
+        wall_side = self._level.wall_side(cell)
+        if style.support is None or wall_side is None:
+            return cell_to_world(cell, style.height)
+        top = place_furniture(cell, wall_side, style.support)
+        return top + Vec3(0, style.scale[1] / 2, 0)  # posé, pas enfoncé
 
     @staticmethod
-    def _spawn_item(cell: Cell, style: ItemStyle) -> Entity:
+    def _spawn_item(style: ItemStyle, position: Vec3) -> Entity:
         return make_lit(
             Entity(
                 model="cube",
-                position=cell_to_world(cell, style.height),
+                position=position,
                 scale=style.scale,
                 color=style.color,
                 collider="box" if style.solid else None,
