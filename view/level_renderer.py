@@ -31,6 +31,8 @@ BATTERY_STYLE = ItemStyle(color.orange, (0.15, 0.3, 0.15), 0.9)
 EXIT_STYLE = ItemStyle(color.green, (0.9, 2.4, 0.9), 1.2)
 DOCUMENT_STYLE = ItemStyle(color.light_gray, (0.25, 0.02, 0.32), 0.9)
 LOCKER_STYLE = ItemStyle(color.dark_gray, (0.9, 2.2, 0.9), 1.1, solid=True)
+KEYCARD_STYLE = ItemStyle(color.cyan, (0.3, 0.02, 0.2), 0.9)
+SECURITY_DOOR_STYLE = ItemStyle(color.brown, (1, 2.4, 1), 1.2, solid=True)
 
 
 class LevelRenderer:
@@ -100,6 +102,11 @@ class LevelRenderer:
         placements += [(cell, BATTERY_STYLE) for cell in level.battery_cells]
         placements += [(cell, DOCUMENT_STYLE) for cell in level.document_cells]
         placements += [(cell, LOCKER_STYLE) for cell in level.hiding_spot_cells]
+        placements += [
+            (cell, SECURITY_DOOR_STYLE) for cell in level.security_door_cells
+        ]
+        if level.keycard_cell is not None:
+            placements.append((level.keycard_cell, KEYCARD_STYLE))
         for cell, style in placements:
             self._items[cell] = self._spawn_item(cell, style)
 

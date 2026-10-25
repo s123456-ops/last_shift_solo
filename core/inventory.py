@@ -2,6 +2,7 @@
 
 FUSE_ITEM = "fusible"
 PANEL_CODE = "code du tableau"
+KEYCARD_ITEM = "carte d'accès"
 
 
 class Inventory:

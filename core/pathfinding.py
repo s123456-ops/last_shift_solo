@@ -6,7 +6,7 @@ Module indépendant du moteur de jeu.
 from collections import deque
 from collections.abc import Iterator
 
-from core.level import Cell, FacilityMap
+from core.level import Cell, Obstacles
 
 DIRECTIONS = ((-1, 0), (1, 0), (0, -1), (0, 1))  # haut, bas, gauche, droite
 
@@ -14,7 +14,7 @@ DIRECTIONS = ((-1, 0), (1, 0), (0, -1), (0, 1))  # haut, bas, gauche, droite
 class Pathfinder:
     """Calcule des chemins entre deux cases sans traverser les murs."""
 
-    def __init__(self, level: FacilityMap) -> None:
+    def __init__(self, level: Obstacles) -> None:
         self._level = level
 
     def find_path(self, start: Cell, goal: Cell) -> list[Cell]:

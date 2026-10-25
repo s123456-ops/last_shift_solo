@@ -6,7 +6,7 @@ Module indépendant du moteur de jeu.
 from abc import ABC, abstractmethod
 
 from core.facility import Facility
-from core.inventory import FUSE_ITEM, PANEL_CODE
+from core.inventory import FUSE_ITEM, KEYCARD_ITEM, PANEL_CODE
 from core.level import Cell
 from core.player import Player
 from core.texts import tr
@@ -156,6 +156,33 @@ class PowerPanel(Interactable):
         player.inventory.remove(FUSE_ITEM)
         self._facility.restore_power()
         return tr("panel.restored")
+
+
+class LockedDoor(Interactable):
+    """Une porte de sécurité. La carte d'accès l'ouvre, puis elle disparaît.
+
+    Une porte ouverte est « consommée » : la vue la retire, et MapWithDoors
+    cesse de la compter comme un mur pour le monstre.
+    """
+
+    def __init__(self, cell: Cell, key_item: str = KEYCARD_ITEM) -> None:
+        super().__init__(cell)
+        self._key_item = key_item
+
+    @property
+    def is_closed(self) -> bool:
+        return not self._consumed
+
+    @property
+    def prompt(self) -> str:
+        return tr("door.prompt")
+
+    def interact(self, player: Player) -> str:
+        if not player.inventory.has(self._key_item):
+            return tr("door.locked")
+        # la carte reste dans l'inventaire : elle ouvre aussi les autres portes
+        self._consumed = True
+        return tr("door.open")
 
 
 class ExitDoor(Interactable):

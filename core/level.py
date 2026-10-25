@@ -5,6 +5,7 @@ Ce module ne dépend d'aucun moteur de jeu : il peut être testé sans ouvrir de
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 WALL = "#"
 FLOOR = "."
@@ -18,6 +19,8 @@ BATTERY = "B"
 DOCUMENT = "D"
 EMERGENCY_LIGHT = "L"
 HIDING_SPOT = "H"
+KEYCARD = "K"
+SECURITY_DOOR = "S"
 KNOWN_TILES = {
     WALL,
     FLOOR,
@@ -31,10 +34,22 @@ KNOWN_TILES = {
     DOCUMENT,
     EMERGENCY_LIGHT,
     HIDING_SPOT,
+    KEYCARD,
+    SECURITY_DOOR,
 }
 
 
 Cell = tuple[int, int]  # (ligne, colonne)
+
+
+class Obstacles(Protocol):
+    """Tout ce qui sait dire si une case bloque le passage et la vue.
+
+    FacilityMap en fait partie, mais aussi MapWithDoors (core/doors.py) :
+    le monstre et la recherche de chemin acceptent l'un comme l'autre.
+    """
+
+    def is_wall(self, cell: Cell) -> bool: ...
 
 
 class LevelFormatError(ValueError):
@@ -56,6 +71,8 @@ class FacilityMap:
     document_cells: tuple[Cell, ...]
     emergency_light_cells: tuple[Cell, ...]
     hiding_spot_cells: tuple[Cell, ...]
+    keycard_cell: Cell | None = None  # facultative : un niveau peut s'en passer
+    security_door_cells: tuple[Cell, ...] = ()
 
     @property
     def height(self) -> int:
@@ -89,6 +106,13 @@ def parse_level(text: str) -> FacilityMap:
         raise LevelFormatError("Le niveau est vide.")
     _check_rectangular(rows)
     _check_known_tiles(rows)
+    keycard_cell = _find_optional(rows, KEYCARD)
+    security_door_cells = tuple(_cells_with(rows, SECURITY_DOOR))
+    if security_door_cells and keycard_cell is None:
+        raise LevelFormatError(
+            f"Le niveau contient une porte de sécurité '{SECURITY_DOOR}' "
+            f"mais aucune carte d'accès '{KEYCARD}' : la partie serait impossible."
+        )
     return FacilityMap(
         rows=tuple(rows),
         player_start=_find_unique(rows, PLAYER_START),
@@ -101,6 +125,8 @@ def parse_level(text: str) -> FacilityMap:
         document_cells=tuple(_cells_with(rows, DOCUMENT)),
         emergency_light_cells=tuple(_cells_with(rows, EMERGENCY_LIGHT)),
         hiding_spot_cells=tuple(_cells_with(rows, HIDING_SPOT)),
+        keycard_cell=keycard_cell,
+        security_door_cells=security_door_cells,
     )
 
 
@@ -138,3 +164,13 @@ def _find_unique(rows: list[str], tile: str) -> Cell:
             f"Le niveau doit contenir exactement un '{tile}' (trouvé : {len(found)})."
         )
     return found[0]
+
+
+def _find_optional(rows: list[str], tile: str) -> Cell | None:
+    """La case du symbole s'il est présent une fois, None s'il est absent."""
+    found = _cells_with(rows, tile)
+    if len(found) > 1:
+        raise LevelFormatError(
+            f"Le niveau contient au plus un '{tile}' (trouvé : {len(found)})."
+        )
+    return found[0] if found else None

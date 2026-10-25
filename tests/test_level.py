@@ -104,3 +104,30 @@ def test_level_without_emergency_light_is_valid():
 def test_hiding_spot_cells_are_found():
     level = parse_level("######\n#PFGE#\n#HHNM#\n######")
     assert level.hiding_spot_cells == ((2, 1), (2, 2))
+
+
+def test_keycard_and_security_doors_are_found():
+    level = parse_level("#######\n#PFGE.#\n#K.NSM#\n#######")
+    assert level.keycard_cell == (2, 1)
+    assert level.security_door_cells == ((2, 4),)
+
+
+def test_level_without_keycard_or_door_is_valid():
+    level = parse_level(SMALL_LEVEL)
+    assert level.keycard_cell is None
+    assert level.security_door_cells == ()
+
+
+def test_security_door_cell_is_not_a_wall_on_the_map():
+    level = parse_level("#######\n#PFGE.#\n#K.NSM#\n#######")
+    assert not level.is_wall((2, 4))  # c'est MapWithDoors qui la ferme
+
+
+def test_door_without_keycard_raises():
+    with pytest.raises(LevelFormatError, match="carte d'accès"):
+        parse_level("#######\n#PFGE.#\n#..NSM#\n#######")
+
+
+def test_two_keycards_raise():
+    with pytest.raises(LevelFormatError, match="'K'"):
+        parse_level("#######\n#PFGE.#\n#KKN.M#\n#######")
