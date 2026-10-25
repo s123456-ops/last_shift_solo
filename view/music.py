@@ -1,13 +1,12 @@
 """Ambient music: a loop whose volume follows the moment of the game."""
 
-from pathlib import Path
-
 from panda3d.core import Filename
 from ursina import Entity, time
 
+from core.paths import resource
 from view.music_mix import MOODS, next_volume
 
-MUSIC_PATH = Path("assets/sounds/music/dread_theme.ogg")
+MUSIC_PATH = resource("assets", "sounds", "music", "dread_theme.ogg")
 
 
 class Music(Entity):
