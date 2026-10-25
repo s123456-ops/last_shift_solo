@@ -20,9 +20,10 @@ class Pathfinder:
     def find_path(self, start: Cell, goal: Cell) -> list[Cell]:
         """Renvoie les cases à parcourir de start à goal (start exclu, goal inclus).
 
-        Liste vide si goal est inaccessible ou si on y est déjà.
+        Liste vide si goal est inaccessible ou si on y est déjà. Le départ peut être
+        bloqué (une porte refermée sur le monstre) : il doit pouvoir en sortir.
         """
-        if self._level.is_wall(start) or self._level.is_wall(goal):
+        if self._level.is_wall(goal):
             return []
         came_from: dict[Cell, Cell | None] = {start: None}
         queue = deque([start])

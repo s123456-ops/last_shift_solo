@@ -3,6 +3,7 @@
 Ce module affiche ; il ne contient aucune règle du jeu.
 """
 
+import math
 from dataclasses import dataclass
 
 from ursina import Entity, Vec3, color, destroy
@@ -11,6 +12,13 @@ from core.level import Cell, FacilityMap
 from view.coords import cell_to_world
 from view.furniture import DESK, SHELF, FurnitureStyle, place_furniture
 from view.lighting import make_lit
+from view.model_loader import (
+    EXIT_DOOR,
+    GENERATOR,
+    ModelLoadError,
+    ModelSpec,
+    place_model,
+)
 
 WALL_HEIGHT = 3.0
 # Textures générées par tools/make_textures.py, rangées dans assets/textures/.
@@ -28,31 +36,76 @@ class ItemStyle:
     height: float
     solid: bool = False  # un objet solide bloque le joueur
     support: FurnitureStyle | None = None  # le meuble sur lequel l'objet est posé
+    texture: str | None = None  # image de assets/textures/ ; sinon, la couleur seule
+    model: ModelSpec | None = None  # modèle 3D ; sinon, un bloc texturé
+    against_wall: bool = False  # adossé au mur le plus proche, face à la pièce
 
 
-FUSE_STYLE = ItemStyle(color.yellow, (0.25, 0.25, 0.25), 1.0, support=SHELF)
-POWER_PANEL_STYLE = ItemStyle(color.azure, (0.8, 1.2, 0.3), 1.4)
-NOTE_STYLE = ItemStyle(color.white, (0.3, 0.02, 0.4), 0.9, support=DESK)
-BATTERY_STYLE = ItemStyle(color.orange, (0.15, 0.3, 0.15), 0.9, support=SHELF)
-EXIT_STYLE = ItemStyle(color.green, (0.9, 2.4, 0.9), 1.2)
-DOCUMENT_STYLE = ItemStyle(color.light_gray, (0.25, 0.02, 0.32), 0.9, support=DESK)
-LOCKER_STYLE = ItemStyle(color.dark_gray, (0.9, 2.2, 0.9), 1.1, solid=True)
-KEYCARD_STYLE = ItemStyle(color.cyan, (0.3, 0.02, 0.2), 0.9, support=DESK)
-SECURITY_DOOR_STYLE = ItemStyle(color.brown, (1, 2.4, 1), 1.2, solid=True)
+FUSE_STYLE = ItemStyle(
+    color.yellow, (0.3, 0.12, 0.12), 1.0, support=SHELF, texture="fuse"
+)
+POWER_PANEL_STYLE = ItemStyle(
+    color.azure, (0.9, 0.85, 0.9), 0.43, solid=True, model=GENERATOR
+)
+NOTE_STYLE = ItemStyle(
+    color.white, (0.3, 0.02, 0.34), 0.9, support=DESK, texture="note"
+)
+BATTERY_STYLE = ItemStyle(
+    color.orange, (0.15, 0.3, 0.15), 0.9, support=SHELF, texture="battery"
+)
+EXIT_STYLE = ItemStyle(
+    color.green, (1.3, 2.3, 0.4), 1.15, model=EXIT_DOOR, against_wall=True
+)
+DOCUMENT_STYLE = ItemStyle(
+    color.light_gray, (0.26, 0.02, 0.32), 0.9, support=DESK, texture="document"
+)
+LOCKER_STYLE = ItemStyle(
+    color.dark_gray, (0.9, 2.2, 0.9), 1.1, solid=True, texture="locker"
+)
+KEYCARD_STYLE = ItemStyle(
+    color.cyan, (0.3, 0.02, 0.22), 0.9, support=DESK, texture="keycard"
+)
+SECURITY_DOOR_STYLE = ItemStyle(
+    color.brown, (1, 2.4, 1), 1.2, solid=True, texture="security_door"
+)
+DOOR_SIZE = (1.0, 2.4, 0.08)  # largeur, hauteur, épaisseur du battant
+DOOR_TEXTURE = "door"
+DOOR_OPEN_ANGLE = 95  # degrés : la porte ouverte se rabat presque contre le mur
 
 
 class LevelRenderer:
     """Construit les murs, le sol, le plafond et les objets d'un niveau."""
 
-    def __init__(self, level: FacilityMap, wall_height: float = WALL_HEIGHT) -> None:
+    def __init__(
+        self, level: FacilityMap, wall_height: float = WALL_HEIGHT, app=None
+    ) -> None:
         self._level = level
+        self._app = app  # sans application, pas de modèles 3D : des blocs de couleur
         self._wall_height = wall_height
         self._items: dict[Cell, Entity] = {}
+        self._doors: dict[Cell, tuple[Entity, Entity]] = {}  # (gond, battant)
 
     def build(self) -> None:
         self._build_floor_and_ceiling()
         self._build_walls()
         self._build_items()
+        self._build_doors()
+
+    def sync_doors(self, doors) -> list[Cell]:
+        """Ouvre ou ferme les portes affichées comme dans le noyau.
+
+        Renvoie les cases des portes qui ont bougé, pour jouer un bruit.
+        """
+        moved = []
+        for door in doors:
+            hinge, panel = self._doors[door.cell]
+            is_open = not door.is_closed
+            if (hinge.rotation_y != 0) == is_open:
+                continue
+            hinge.rotation_y = DOOR_OPEN_ANGLE if is_open else 0
+            panel.collider = None if is_open else "box"
+            moved.append(door.cell)
+        return moved
 
     def remove_item(self, cell: Cell) -> None:
         """Retire l'objet affiché sur une case, par exemple quand il est ramassé."""
@@ -116,9 +169,62 @@ class LevelRenderer:
         if level.keycard_cell is not None:
             placements.append((level.keycard_cell, KEYCARD_STYLE))
         for cell, style in placements:
-            self._items[cell] = self._spawn_item(
-                style, self._item_position(cell, style)
+            if style.model is not None and self._app is not None:
+                self._items[cell] = self._spawn_model(cell, style)
+            else:
+                self._items[cell] = self._spawn_item(
+                    style, self._item_position(cell, style)
+                )
+
+    def _spawn_model(self, cell: Cell, style: ItemStyle) -> Entity:
+        """Un modèle 3D, tourné vers la pièce ; un bloc de couleur s'il manque."""
+        holder = Entity(position=cell_to_world(cell))
+        wall_side = self._level.wall_side(cell) if style.against_wall else None
+        if wall_side is not None:
+            d_row, d_col = wall_side
+            depth = style.scale[2]
+            holder.position += Vec3(d_col, 0, -d_row) * (0.5 - depth / 2)
+            holder.rotation_y = math.degrees(math.atan2(-d_col, d_row))  # dos au mur
+        try:
+            place_model(self._app, style.model, holder)
+        except ModelLoadError as error:
+            print(f"{error} Un bloc de couleur le remplace.")
+            destroy(holder)
+            return self._spawn_item(style, self._item_position(cell, style))
+        if style.solid:
+            Entity(
+                parent=holder,
+                model="cube",
+                y=style.scale[1] / 2,
+                scale=style.scale,
+                collider="box",
+                visible=False,
             )
+        return holder
+
+    def _build_doors(self) -> None:
+        """Chaque battant tourne autour d'un gond posé contre le mur."""
+        for cell in self._level.door_cells:
+            row, col = cell
+            across_columns = self._level.is_wall(
+                (row, col - 1)
+            )  # murs à gauche et à droite
+            frame = Entity(
+                position=cell_to_world(cell), rotation_y=0 if across_columns else 90
+            )
+            hinge = Entity(parent=frame, x=-DOOR_SIZE[0] / 2)
+            width, height, _ = DOOR_SIZE
+            panel = make_lit(
+                Entity(
+                    parent=hinge,
+                    model="cube",
+                    position=(width / 2, height / 2, 0),
+                    scale=DOOR_SIZE,
+                    texture=DOOR_TEXTURE,
+                    collider="box",
+                )
+            )
+            self._doors[cell] = (hinge, panel)
 
     def _item_position(self, cell: Cell, style: ItemStyle) -> Vec3:
         """Sur son meuble s'il en a un (collé au mur), sinon au centre de la case."""
@@ -135,7 +241,8 @@ class LevelRenderer:
                 model="cube",
                 position=position,
                 scale=style.scale,
-                color=style.color,
+                texture=style.texture,
+                color=color.white if style.texture else style.color,
                 collider="box" if style.solid else None,
             )
         )

@@ -4,6 +4,7 @@ from core.facility import Facility
 from core.flashlight import Flashlight
 from core.interactables import (
     BatteryPickup,
+    Door,
     ExitDoor,
     HidingSpot,
     Interactable,
@@ -191,3 +192,24 @@ def test_panel_refuses_with_half_of_the_code():
     assert not facility.power_on
     assert "dernier chiffre" in message
     assert player.inventory.has(FUSE_ITEM)  # le fusible n'est pas gaspillé
+
+
+def test_door_opens_then_closes():
+    door = Door((2, 4))
+    player = make_player_with_low_battery()
+    door.interact(player)
+    assert not door.is_closed
+    door.interact(player)
+    assert door.is_closed
+
+
+def test_door_is_never_consumed():
+    door = Door((2, 4))
+    door.interact(make_player_with_low_battery())
+    assert not door.is_consumed
+
+
+def test_door_cannot_be_used_from_its_own_doorway():
+    door = Door((2, 4))
+    assert Interactions([door]).near((2, 3)) is door
+    assert Interactions([door]).near((2, 4)) is None  # sinon on s'enfermerait dedans

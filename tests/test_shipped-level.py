@@ -40,3 +40,7 @@ def test_small_items_rest_against_a_straight_wall():
     ]
     for cell in small_items:
         assert LEVEL.wall_side(cell) is not None, cell
+
+
+def test_exit_door_stands_against_a_wall():
+    assert LEVEL.wall_side(LEVEL.exit_cell) is not None

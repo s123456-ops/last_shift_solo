@@ -1,7 +1,19 @@
 """Le plan du bâtiment avec ses portes de sécurité. Module indépendant du moteur de jeu."""
 
-from core.interactables import LockedDoor
+from collections.abc import Sequence
+from typing import Protocol
+
 from core.level import Cell, Obstacles
+
+
+class Barrier(Protocol):
+    """Tout ce qui peut boucher une case : porte de sécurité ou porte normale."""
+
+    @property
+    def cell(self) -> Cell: ...
+
+    @property
+    def is_closed(self) -> bool: ...
 
 
 class MapWithDoors:
@@ -11,7 +23,7 @@ class MapWithDoors:
     source de vérité : quand le joueur en ouvre une, le monstre peut y passer.
     """
 
-    def __init__(self, level: Obstacles, doors: list[LockedDoor]) -> None:
+    def __init__(self, level: Obstacles, doors: Sequence[Barrier]) -> None:
         self._level = level
         self._doors = {door.cell: door for door in doors}
 

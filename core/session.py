@@ -3,11 +3,12 @@
 Module indépendant du moteur de jeu.
 """
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
 
 from core.facility import Facility
-from core.interactables import Interactable, Interactions
+from core.interactables import Door, Interactable, Interactions
 from core.level import Cell
 from core.monster import Monster, Situation
 from core.objectives import current_objective
@@ -39,6 +40,8 @@ class GameSession:
         facility: Facility,
         grace_period: float = 20.0,
         peaceful: bool = False,
+        doors: Sequence[Door] = (),
+        monster_opens_doors: bool = False,
     ) -> None:
         self._player = player
         self._monster = monster
@@ -46,6 +49,8 @@ class GameSession:
         self._facility = facility
         self._grace_period = grace_period
         self._peaceful = peaceful
+        self._doors = tuple(doors)
+        self._monster_opens_doors = monster_opens_doors
         self._elapsed = 0.0
         self._status = GameStatus.PLAYING
 
@@ -76,6 +81,11 @@ class GameSession:
     @property
     def monster_is_searching(self) -> bool:
         return self._monster.is_searching
+
+    @property
+    def doors(self) -> tuple[Door, ...]:
+        """Les portes normales, pour que la vue les affiche ouvertes ou fermées."""
+        return self._doors
 
     @property
     def power_on(self) -> bool:
@@ -117,7 +127,16 @@ class GameSession:
             flashlight_on=self._player.flashlight.is_on,
             player_hidden=self._player.is_hidden,
         )
-        return self._monster.step(situation)
+        cell = self._monster.step(situation)
+        if self._monster_opens_doors:
+            self._force_door(cell)
+        return cell
+
+    def _force_door(self, cell: Cell) -> None:
+        """En difficile, le monstre ouvre la porte fermée qu'il s'apprête à franchir."""
+        for door in self._doors:
+            if door.cell == cell and door.is_closed:
+                door.open()
 
     def report_caught(self) -> None:
         """La vue a détecté le contact ; c'est la session qui décide de la défaite."""

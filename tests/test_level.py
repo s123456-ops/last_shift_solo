@@ -146,3 +146,13 @@ def test_wall_side_ignores_an_isolated_bit_of_wall():
 def test_wall_side_is_none_in_the_middle_of_a_room():
     level = parse_level("#######\n#P....#\n#..F..#\n#G.N.E#\n#..M..#\n#######")
     assert level.wall_side((2, 3)) is None
+
+
+def test_door_cells_are_found():
+    level = parse_level("#########\n#P..#..M#\n#...O...#\n#EFG#..N#\n#########")
+    assert level.door_cells == ((2, 4),)
+
+
+def test_door_outside_an_opening_raises():
+    with pytest.raises(LevelFormatError, match="entre deux murs"):
+        parse_level("#######\n#P.O.M#\n#EFG.N#\n#######")
