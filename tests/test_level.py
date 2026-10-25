@@ -131,3 +131,18 @@ def test_door_without_keycard_raises():
 def test_two_keycards_raise():
     with pytest.raises(LevelFormatError, match="'K'"):
         parse_level("#######\n#PFGE.#\n#KKN.M#\n#######")
+
+
+def test_wall_side_finds_the_wall_next_to_a_cell():
+    level = parse_level(SMALL_LEVEL)
+    assert level.wall_side((1, 1)) == (-1, 0)  # le mur du nord passe en premier
+
+
+def test_wall_side_ignores_an_isolated_bit_of_wall():
+    level = parse_level("#######\n#P...E#\n#..#..#\n#F.G.N#\n#..M..#\n#######")
+    assert level.wall_side((2, 2)) is None  # (2, 3) est un pan de mur isolé
+
+
+def test_wall_side_is_none_in_the_middle_of_a_room():
+    level = parse_level("#######\n#P....#\n#..F..#\n#G.N.E#\n#..M..#\n#######")
+    assert level.wall_side((2, 3)) is None

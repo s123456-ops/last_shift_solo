@@ -79,5 +79,8 @@
   "difficulty.easy": "facile",
   "difficulty.normal": "normale",
   "difficulty.hard": "difficile",
-  "map.keycard": "Carte d'accès"
+  "map.keycard": "Carte d'accès",
+  "options.retro": "Style PS1 : {value}",
+  "retro.on": "activé",
+  "retro.off": "désactivé"
 }

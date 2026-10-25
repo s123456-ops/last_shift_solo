@@ -92,6 +92,22 @@ class FacilityMap:
     def wall_cells(self) -> list[Cell]:
         return _cells_with(self.rows, WALL)
 
+    def wall_side(self, cell: Cell) -> Cell | None:
+        """La direction (d_ligne, d_colonne) d'un mur droit collé à la case, ou None.
+
+        « Droit » : le mur continue des deux côtés. On ne pose pas un meuble
+        contre le bord d'une ouverture. Sert à placer bureaux et étagères.
+        """
+        row, col = cell
+        for d_row, d_col in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            wall = (row + d_row, col + d_col)
+            if not self.is_wall(wall):
+                continue
+            along = ((0, -1), (0, 1)) if d_row else ((-1, 0), (1, 0))
+            if all(self.is_wall((wall[0] + a, wall[1] + b)) for a, b in along):
+                return (d_row, d_col)
+        return None
+
 
 def load_level(path: str | Path) -> FacilityMap:
     """Lit un fichier de niveau et le valide."""

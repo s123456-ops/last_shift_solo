@@ -27,3 +27,16 @@ def test_keycard_is_reachable_without_opening_any_door():
     doors = [LockedDoor(cell) for cell in LEVEL.security_door_cells]
     pathfinder = Pathfinder(MapWithDoors(LEVEL, doors))
     assert pathfinder.find_path(LEVEL.player_start, LEVEL.keycard_cell)
+
+
+def test_small_items_rest_against_a_straight_wall():
+    """Piles, notes et documents sont posés sur un meuble collé au mur."""
+    small_items = [
+        LEVEL.fuse_cell,
+        LEVEL.note_cell,
+        LEVEL.keycard_cell,
+        *LEVEL.battery_cells,
+        *LEVEL.document_cells,
+    ]
+    for cell in small_items:
+        assert LEVEL.wall_side(cell) is not None, cell
