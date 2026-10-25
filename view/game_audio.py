@@ -71,3 +71,8 @@ class GameAudio:
         self._monster.stop_all()
         self._player.stop_all()
         self._ambience.stop_all()
+
+
+def set_master_volume(app, volume: float) -> None:
+    """Volume général de tous les sons du jeu : 0 = muet, 1 = plein volume."""
+    app.sfxManagerList[0].setVolume(volume)

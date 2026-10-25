@@ -56,6 +56,8 @@ class Lighting:
     def __init__(self) -> None:
         self._flashlight_node = None
         self._flashlight_on = True
+        self._ambient = None
+        self._fog = None
 
     def setup(self) -> None:
         window.color = color.black
@@ -75,6 +77,20 @@ class Lighting:
             scene.setLight(self._flashlight_node)
         else:
             scene.clearLight(self._flashlight_node)
+
+    def set_brightness(self, factor: float) -> None:
+        """Éclaircit (factor > 1) ou assombrit (factor < 1) l'ambiance et le brouillard.
+
+        La lampe torche et les lumières de secours ne changent pas : seule
+        la pénombre générale s'adapte à l'écran du joueur.
+        """
+        if self._ambient is None or self._fog is None:
+            raise RuntimeError(
+                "Lighting.setup() doit être appelé avant set_brightness()."
+            )
+        red, green, blue, alpha = AMBIENT_COLOR
+        self._ambient.setColor((red * factor, green * factor, blue * factor, alpha))
+        self._fog.setExpDensity(FOG_DENSITY / factor)
 
     def add_emergency_lights(
         self, cells: tuple[Cell, ...], ceiling_height: float
@@ -117,15 +133,15 @@ class Lighting:
         return light
 
     def _add_ambient_light(self) -> None:
-        ambient = AmbientLight("ambient")
-        ambient.setColor(AMBIENT_COLOR)
-        scene.setLight(scene.attachNewNode(ambient))
+        self._ambient = AmbientLight("ambient")
+        self._ambient.setColor(AMBIENT_COLOR)
+        scene.setLight(scene.attachNewNode(self._ambient))
 
     def _add_fog(self) -> None:
-        fog = Fog("darkness")
-        fog.setColor(0, 0, 0)
-        fog.setExpDensity(FOG_DENSITY)
-        scene.setFog(fog)
+        self._fog = Fog("darkness")
+        self._fog.setColor(0, 0, 0)
+        self._fog.setExpDensity(FOG_DENSITY)
+        scene.setFog(self._fog)
 
     def _add_flashlight(self) -> None:
         flashlight = Spotlight("flashlight")

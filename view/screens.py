@@ -14,25 +14,44 @@ from ursina import (
     time,
 )
 
-from core.texts import tr
+from core.texts import SUPPORTED_LANGUAGES, current_language, set_language, tr
+from view.settings import Setting
 
 INTRO_CARD_KEYS = ("intro.1", "intro.2", "intro.3", "intro.4")
 FADE_DURATION = 1.0  # secondes d'apparition et de disparition de chaque carton
 HOLD_DURATION = 3.0  # secondes où le carton reste pleinement affiché
 SKIP_KEYS = ("space", "enter")
 TITLE_BAND_OPACITY = 0.55
+MODE_BUTTON = (0.42, 0.07)
+OPTION_BUTTON = (0.36, 0.06)
 
 
 class TitleScreen(Entity):
-    """Titre du jeu, avec Commencer et Quitter, par-dessus le décor."""
+    """Titre du jeu, par-dessus le décor : choix du mode, de la langue et de la luminosité."""
 
-    def __init__(self, on_start: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        on_start: Callable[[bool], None],
+        brightness: Setting,
+        difficulty: Setting,
+    ) -> None:
         super().__init__(parent=camera.ui)
         self._on_start = on_start
+        self._brightness = brightness
+        self._difficulty = difficulty
         mouse.locked = False
         mouse.visible = True
+        self._build()
+
+    def _build(self) -> None:
+        """Crée tous les éléments ; rappelé après un changement de langue."""
         band = Entity(
-            parent=self, model="quad", color=color.black, scale=(2, 0.62), y=0.02, z=0.1
+            parent=self,
+            model="quad",
+            color=color.black,
+            scale=(2, 0.8),
+            y=-0.07,
+            z=0.1,
         )
         band.alpha = TITLE_BAND_OPACITY
         Text(
@@ -45,25 +64,67 @@ class TitleScreen(Entity):
         )
         Text(tr("title.subtitle"), parent=self, origin=(0, 0), y=0.06, color=color.gray)
         buttons = (
-            (tr("title.start"), -0.08, self._start),
-            (tr("title.quit"), -0.18, application.quit),
+            (
+                tr("title.explore"),
+                (0, -0.05),
+                MODE_BUTTON,
+                lambda: self._start(peaceful=True),
+            ),
+            (
+                tr("title.survive"),
+                (0, -0.13),
+                MODE_BUTTON,
+                lambda: self._start(peaceful=False),
+            ),
+            (self._difficulty.label, (0, -0.21), OPTION_BUTTON, self._next_difficulty),
+            (
+                tr("title.language", name=tr("language.name")),
+                (-0.19, -0.29),
+                OPTION_BUTTON,
+                self._next_language,
+            ),
+            (
+                self._brightness.label,
+                (0.19, -0.29),
+                OPTION_BUTTON,
+                self._next_brightness,
+            ),
+            (tr("title.quit"), (0, -0.38), MODE_BUTTON, application.quit),
         )
-        for label, y, action in buttons:
+        for label, position, scale, action in buttons:
             Button(
                 label,
                 parent=self,
-                y=y,
-                scale=(0.3, 0.07),
+                position=position,
+                scale=scale,
                 color=color.black,
                 highlight_color=color.dark_gray,
                 text_color=color.light_gray,
                 on_click=action,
             )
 
-    def _start(self) -> None:
+    def _rebuild(self) -> None:
+        for child in list(self.children):
+            destroy(child)
+        self._build()
+
+    def _next_language(self) -> None:
+        index = SUPPORTED_LANGUAGES.index(current_language())
+        set_language(SUPPORTED_LANGUAGES[(index + 1) % len(SUPPORTED_LANGUAGES)])
+        self._rebuild()
+
+    def _next_brightness(self) -> None:
+        self._brightness.next()  # le décor derrière le titre change tout de suite
+        self._rebuild()
+
+    def _next_difficulty(self) -> None:
+        self._difficulty.next()
+        self._rebuild()
+
+    def _start(self, peaceful: bool) -> None:
         on_start = self._on_start
         destroy(self)
-        on_start()
+        on_start(peaceful)
 
 
 class IntroSequence(Entity):
