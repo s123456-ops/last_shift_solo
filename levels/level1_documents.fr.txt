@@ -25,3 +25,17 @@ Il connaît mes rondes.
 Il marche comme quelqu'un qui a fait ce travail.
 J'ai changé le code du tableau. Dernier chiffre : 3.
 Comme la cellule.
+
+[2, 33] Lettre du Dr Saunier, jamais envoyée
+Madame Varenne,
+On vous a dit que votre fils était mort dans un accident de service.
+C'est faux. Thomas est vivant, au Secteur B, cellule 3.
+Je ne sais plus si c'est encore lui.
+Je suis désolée.
+— H. Saunier
+
+[3, 42] Plaque — Cellule 3
+SUJET 7 — VARENNE, T.
+Protocole Lazare. Accès niveau 4.
+En cas de coupure : ne pas ouvrir.
+Il revient toujours à sa cellule.
