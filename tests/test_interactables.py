@@ -8,11 +8,12 @@ from core.interactables import (
     HidingSpot,
     Interactable,
     Interactions,
+    LockedDoor,
     Note,
     Pickup,
     PowerPanel,
 )
-from core.inventory import FUSE_ITEM, PANEL_CODE
+from core.inventory import FUSE_ITEM, KEYCARD_ITEM, PANEL_CODE
 from core.player import Player
 from core.stamina import Stamina
 
@@ -154,3 +155,27 @@ def test_notes_are_readable():
 
 def test_batteries_are_not_readable():
     assert not BatteryPickup((1, 1)).is_readable
+
+
+def test_locked_door_stays_closed_without_keycard():
+    door = LockedDoor((3, 3))
+    message = door.interact(make_player_with_low_battery())
+    assert "Verrouillée" in message
+    assert door.is_closed and not door.is_consumed
+
+
+def test_keycard_opens_the_door_and_the_door_disappears():
+    player = make_player_with_low_battery()
+    player.inventory.add(KEYCARD_ITEM)
+    door = LockedDoor((3, 3))
+    door.interact(player)
+    assert not door.is_closed
+    assert Interactions([door]).near((3, 3)) is None
+
+
+def test_keycard_is_kept_for_the_next_door():
+    player = make_player_with_low_battery()
+    player.inventory.add(KEYCARD_ITEM)
+    LockedDoor((3, 3)).interact(player)
+    LockedDoor((5, 5)).interact(player)
+    assert player.inventory.has(KEYCARD_ITEM)

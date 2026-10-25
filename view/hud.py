@@ -99,6 +99,26 @@ class Hud:
         self._reading_text = Text(
             "", parent=camera.ui, origin=(0, 0), y=0.03, enabled=False
         )
+        self._pause_panel = Entity(
+            parent=camera.ui,
+            model="quad",
+            color=color.black,
+            scale=(2, 1),
+            z=0.2,
+            enabled=False,
+        )
+        self._pause_panel.alpha = 0.75
+        self._pause_title = Text(
+            tr("pause.title"), parent=camera.ui, origin=(0, 0), scale=2, enabled=False
+        )
+        self._pause_hint = Text(
+            tr("pause.hint"),
+            parent=camera.ui,
+            origin=(0, 0),
+            y=-0.1,
+            color=color.light_gray,
+            enabled=False,
+        )
         self._reading_hint = Text(
             tr("hud.close"),
             parent=camera.ui,
@@ -152,6 +172,12 @@ class Hud:
     def close_document(self) -> None:
         for element in (self._reading_panel, self._reading_text, self._reading_hint):
             element.enabled = False
+
+    def show_pause(self, paused: bool) -> None:
+        """Assombrit l'écran et affiche les touches pour reprendre ou quitter."""
+        self.show_prompt(None)
+        for element in (self._pause_panel, self._pause_title, self._pause_hint):
+            element.enabled = paused
 
     def show_end(self, text: str, won: bool) -> None:
         self.show_prompt(None)

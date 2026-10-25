@@ -38,5 +38,12 @@
   "exit.locked": "Verrouillée. Sans courant, la porte ne s'ouvrira pas.",
   "exit.open": "05 h 58. Vous rendez votre badge.",
   "code_note.title": "Note de Daniel Morel",
-  "code_note.text": "Si tu lis ça, le courant a sauté et les portes du B sont ouvertes.\nIl y a un fusible de rechange dans la réserve. Code du tableau : 4 7 1.\nNe cours pas sauf si tu y es obligé. Il entend.\nRends ton badge à l'heure.\n— D. M."
+  "code_note.text": "Si tu lis ça, le courant a sauté et les portes du B sont ouvertes.\nIl y a un fusible de rechange dans la réserve, au nord-est.\nElle est verrouillée : j'ai oublié ma carte d'accès en salle de maintenance, au sud-ouest.\nCode du tableau : 4 7 1.\nNe cours pas sauf si tu y es obligé. Il entend.\nRends ton badge à l'heure.\n— D. M.",
+  "keycard.prompt": "Ramasser la carte d'accès",
+  "keycard.message": "Carte d'accès de D. Morel récupérée.",
+  "door.prompt": "Ouvrir la porte de sécurité",
+  "door.locked": "Verrouillée. Le lecteur attend une carte d'accès.",
+  "door.open": "Bip. La carte est acceptée, la porte s'ouvre.",
+  "pause.title": "PAUSE",
+  "pause.hint": "[Échap] Reprendre    [Q] Quitter"
 }

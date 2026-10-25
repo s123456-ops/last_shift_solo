@@ -12,6 +12,7 @@ from ursina import Entity, Ursina, Vec2, application, color, held_keys, time, wi
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 from core.documents import DocumentFormatError, load_documents
+from core.doors import MapWithDoors
 from core.facility import Facility
 from core.flashlight import Flashlight
 from core.interactables import (
@@ -19,11 +20,12 @@ from core.interactables import (
     ExitDoor,
     HidingSpot,
     Interactions,
+    LockedDoor,
     Note,
     Pickup,
     PowerPanel,
 )
-from core.inventory import FUSE_ITEM, PANEL_CODE
+from core.inventory import FUSE_ITEM, KEYCARD_ITEM, PANEL_CODE
 from core.level import LevelFormatError, load_level
 from core.monster import Monster
 from core.player import Player
@@ -59,7 +61,8 @@ MONSTER_CHASE_SPEED = 4  # il fonce : seule la course permet de le distancer
 MONSTER_GRACE_PERIOD = 20  # secondes avant qu'il ne commence à bouger
 PEACEFUL_MODE = False  # True pour tester sans le monstre
 CATCH_DISTANCE = 0.9
-MONSTER_PATROL = [(14, 26), (7, 22), (11, 15), (12, 4), (7, 8), (2, 26)]
+START_INPUT_GRACE = 0.5  # secondes : la touche qui a fermé l'intro est ignorée
+MONSTER_PATROL = [(14, 26), (7, 22), (11, 15), (12, 4), (7, 8), (2, 15)]
 
 TITLE_CAMERA_START = (7, 2)  # début du couloir principal, à l'ouest
 TITLE_CAMERA_END = (7, 18)  # la caméra s'arrête avant d'atteindre la silhouette
@@ -89,25 +92,40 @@ class GameController(Entity):
         self._hud = hud
         self._position_before_hiding = first_person.position
         self._end_shown = False
+        self._paused = False
+        self._input_grace = START_INPUT_GRACE
 
     def input(self, key: str) -> None:
+        if self._session.is_over:
+            if key == "escape":
+                application.quit()
+            return
+        if self._input_grace > 0:
+            return
+        if self._paused:
+            if key == "escape":
+                self._toggle_pause()
+            elif key == "q":
+                application.quit()
+            return
         if self._hud.is_reading:
             if key in ("e", "escape"):
                 self._close_document()
             return
         if key == "escape":
-            application.quit()
+            self._toggle_pause()
         elif key == "f":
             self._toggle_flashlight()
         elif key == "e":
             self._interact()
 
     def update(self) -> None:
+        self._input_grace = max(0.0, self._input_grace - time.dt)
         if self._session.is_over:
             self._show_end_once()
             return
-        if self._hud.is_reading:
-            return  # la lecture met le jeu en pause
+        if self._paused or self._hud.is_reading:
+            return  # la pause et la lecture figent le jeu
         is_moving = (
             self._first_person.enabled and self._first_person.direction.length() > 0
         )
@@ -115,6 +133,14 @@ class GameController(Entity):
         self._refresh_player_view()
         self._update_monster()
         self._update_audio(is_moving)
+
+    def _toggle_pause(self) -> None:
+        """Fige la partie ; le contrôleur du joueur libère ou capture la souris."""
+        self._paused = not self._paused
+        self._first_person.enabled = (
+            not self._paused and not self._session.player.is_hidden
+        )
+        self._hud.show_pause(self._paused)
 
     def _player_cell(self):
         return world_to_cell(self._first_person.position)
@@ -225,6 +251,7 @@ def build_session(level, language: str) -> GameSession:
     """Assemble le noyau : joueur, monstre, bâtiment et objets du niveau."""
     facility = Facility()
     documents = load_documents(DOCUMENTS_PATH.format(language=language), level)
+    doors = [LockedDoor(cell) for cell in level.security_door_cells]
     items = [
         Pickup(level.fuse_cell, FUSE_ITEM, tr("fuse.prompt"), tr("fuse.message")),
         Note(
@@ -239,11 +266,21 @@ def build_session(level, language: str) -> GameSession:
     items += [BatteryPickup(cell, BATTERY_CHARGE) for cell in level.battery_cells]
     items += [HidingSpot(cell) for cell in level.hiding_spot_cells]
     items += [Note(doc.cell, doc.title, doc.text) for doc in documents.values()]
+    items += doors
+    if level.keycard_cell is not None:
+        items.append(
+            Pickup(
+                level.keycard_cell,
+                KEYCARD_ITEM,
+                tr("keycard.prompt"),
+                tr("keycard.message"),
+            )
+        )
     player = Player(
         Flashlight(FLASHLIGHT_CAPACITY, FLASHLIGHT_DRAIN_PER_SECOND),
         Stamina(STAMINA_CAPACITY, STAMINA_DRAIN_PER_SECOND, STAMINA_REGEN_PER_SECOND),
     )
-    monster = Monster(level, level.monster_start, MONSTER_PATROL)
+    monster = Monster(MapWithDoors(level, doors), level.monster_start, MONSTER_PATROL)
     return GameSession(
         player,
         monster,
@@ -295,20 +332,6 @@ def parse_arguments() -> argparse.Namespace:
 
 
 def main() -> None:
-    import traceback  # --- diagnostic temporaire, à retirer ensuite ---
-
-    real_exit = sys.exit
-
-    def traced_exit(*args):
-        print("\n=== QUELQU'UN QUITTE LE JEU, DEPUIS : ===")
-        traceback.print_stack()
-        real_exit(*args)
-
-    sys.exit = traced_exit
-    # --- fin du diagnostic ---
-
-    language = parse_arguments().lang
-
     language = parse_arguments().lang
     try:
         set_language(language)

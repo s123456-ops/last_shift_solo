@@ -5,7 +5,7 @@ Module indépendant du moteur de jeu.
 
 import math
 
-from core.level import Cell, FacilityMap
+from core.level import Cell, Obstacles
 
 
 def distance(a: Cell, b: Cell) -> float:
@@ -23,7 +23,7 @@ def cells_between(a: Cell, b: Cell) -> list[Cell]:
 
 
 def can_see(
-    level: FacilityMap, observer: Cell, target: Cell, max_distance: float
+    level: Obstacles, observer: Cell, target: Cell, max_distance: float
 ) -> bool:
     """Vrai si la cible est assez proche et qu'aucun mur ne coupe la ligne de vue."""
     if distance(observer, target) > max_distance:

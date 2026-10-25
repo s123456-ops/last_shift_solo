@@ -6,7 +6,7 @@ Module indépendant du moteur de jeu.
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from core.level import Cell, FacilityMap
+from core.level import Cell, Obstacles
 from core.pathfinding import Pathfinder
 from core.perception import can_hear, can_see
 
@@ -95,7 +95,7 @@ class Monster:
 
     def __init__(
         self,
-        level: FacilityMap,
+        level: Obstacles,
         start: Cell,
         patrol_route: list[Cell],
         sight_with_light: float = 8,
