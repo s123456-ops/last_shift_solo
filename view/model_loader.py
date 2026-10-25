@@ -6,6 +6,7 @@ from pathlib import Path
 from panda3d.core import Filename, NodePath
 from ursina import Entity
 
+from core.paths import resource
 from view.lighting import make_lit
 
 
@@ -24,10 +25,14 @@ class ModelSpec:
 
 
 MONSTER = ModelSpec(
-    Path("assets/monster/monster.bam"), height=2.6, pitch=90, heading=180
+    resource("assets", "monster", "monster.bam"), height=2.6, pitch=90, heading=180
 )
-GENERATOR = ModelSpec(Path("assets/models/generator.bam"), height=0.85, pitch=90)
-EXIT_DOOR = ModelSpec(Path("assets/models/exit_door.bam"), height=2.3, pitch=90)
+GENERATOR = ModelSpec(
+    resource("assets", "models", "generator.bam"), height=0.85, pitch=90
+)
+EXIT_DOOR = ModelSpec(
+    resource("assets", "models", "exit_door.bam"), height=2.3, pitch=90
+)
 
 
 def load_model(app, path: Path) -> NodePath:

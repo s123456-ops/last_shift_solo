@@ -7,10 +7,18 @@ Usage:
 
 import argparse
 import sys
+from pathlib import Path
 
+from panda3d.core import Filename, loadPrcFileData
 from ursina import Entity, Ursina, Vec2, application, color, held_keys, time, window
 from ursina.prefabs.first_person_controller import FirstPersonController
 
+from core.crash_report import (
+    ENGINE_LOG_NAME,
+    enable_native_crash_log,
+    show_crash_message,
+    write_crash_report,
+)
 from core.difficulty import DIFFICULTIES, NORMAL, Difficulty
 from core.documents import DocumentFormatError, load_documents
 from core.doors import MapWithDoors
@@ -30,6 +38,7 @@ from core.interactables import (
 from core.inventory import CODE_END, CODE_START, FUSE_ITEM, KEYCARD_ITEM
 from core.level import LevelFormatError, load_level
 from core.monster import Monster
+from core.paths import ROOT, resource
 from core.player import Player
 from core.props import MapWithFurniture, PropFormatError, load_props
 from core.session import GameSession, GameStatus
@@ -52,11 +61,11 @@ from view.settings import PlayerSettings, Setting, default_settings
 from view.title_backdrop import TitleBackdrop
 
 GAME_LANGUAGE = "en"
-LEVEL_PATH = "levels/level1.txt"
-DOCUMENTS_PATH = "levels/level1_documents.{language}.txt"
-SIGNS_PATH = "levels/level1_signs.txt"
-PROPS_PATH = "levels/level1_props.txt"
-
+LEVEL_PATH = resource("levels", "level1.txt")
+DOCUMENTS_PATH = "level1_documents.{language}.txt"  # in levels/
+SIGNS_PATH = resource("levels", "level1_signs.txt")
+PROPS_PATH = resource("levels", "level1_props.txt")
+LOG_FOLDER = ROOT / "logs"
 FLASHLIGHT_CAPACITY = 100
 BATTERY_CHARGE = 40  # a battery recharges 40 % of the flashlight
 
@@ -316,7 +325,9 @@ def build_session(
 ) -> GameSession:
     """Assembles the core: player, monster, building and the level's objects."""
     facility = Facility()
-    documents = load_documents(DOCUMENTS_PATH.format(language=language), level)
+    documents = load_documents(
+        resource("levels", DOCUMENTS_PATH.format(language=language)), level
+    )
     security_doors = [LockedDoor(cell) for cell in level.security_door_cells]
     doors = [Door(cell) for cell in level.door_cells]
     items = [
@@ -457,7 +468,13 @@ def main() -> None:
     ) as error:
         sys.exit(f"Could not prepare the game: {error}")
 
-    app = Ursina()
+    application.asset_folder = (
+        ROOT  # textures are found wherever the game is launched from
+    )
+    enable_native_crash_log(LOG_FOLDER)
+    engine_log = Filename.from_os_specific(str(LOG_FOLDER / ENGINE_LOG_NAME))
+    loadPrcFileData("", f"notify-output {engine_log.get_fullpath()}")
+    app = Ursina(development_mode=False)
     window.color = color.black
     renderer, lighting = build_world(app, level, signs, props)
     settings = default_settings()
@@ -495,5 +512,19 @@ def main() -> None:
     app.run()
 
 
+def run_safely() -> None:
+    """Runs the game; if it crashes, leaves a report the player can send."""
+    try:
+        main()
+    except SystemExit:
+        raise
+    except BaseException as error:
+        report = write_crash_report(
+            error, [LOG_FOLDER, ROOT]
+        )
+        show_crash_message(report)
+        raise
+
+
 if __name__ == "__main__":
-    main()
+    run_safely()

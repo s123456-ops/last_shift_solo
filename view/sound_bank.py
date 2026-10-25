@@ -1,11 +1,12 @@
 """Shared audio toolbox: loading, playing, loops and closeness."""
 
 import random
-from pathlib import Path
 
 from panda3d.core import AudioSound, Filename
 
-SOUNDS_ROOT = Path("assets/sounds")
+from core.paths import resource
+
+SOUNDS_ROOT = resource("assets", "sounds")
 HEARING_DISTANCE = 18.0  # beyond this, the monster counts as far away (in metres)
 
 

@@ -5,9 +5,10 @@ Engine-independent module.
 """
 
 import json
-from pathlib import Path
 
-LOCALES_DIR = Path(__file__).resolve().parent.parent / "locales"
+from core.paths import resource
+
+LOCALES_DIR = resource("locales")
 SUPPORTED_LANGUAGES = ("fr", "en")
 DEFAULT_LANGUAGE = "en"
 

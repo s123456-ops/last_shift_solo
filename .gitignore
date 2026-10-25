@@ -2,3 +2,12 @@
 __pycache__/
 .pytest_cache/
 *.pyc
+
+# packaged builds
+build/
+dist/
+*.egg-info/
+
+
+logs/
+crash_log.txt
