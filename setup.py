@@ -10,7 +10,7 @@ double-click "THE LAST SHIFT.exe". Players need nothing else installed.
 
 from setuptools import setup
 
-VERSION = "0.1.0"
+VERSION = "0.1.2"
 
 setup(
     name="THE_LAST_SHIFT",
@@ -19,6 +19,8 @@ setup(
         "build_apps": {
             # a game window, without a console behind it
             "gui_apps": {"THE LAST SHIFT": "main.py"},
+            # the same game with a console window, to read errors on a tester's PC
+            "console_apps": {"THE LAST SHIFT (debug)": "main.py"},
             # the game's data files, copied next to the executable
             "include_patterns": [
                 "levels/*.txt",
@@ -43,9 +45,6 @@ setup(
             "requirements_path": "requirements-game.txt",
             "plugins": ["pandagl", "p3openal_audio"],
             "platforms": ["win_amd64"],
-            # if the game crashes, the error is written here for the player to send
-            "log_filename": "$USER_APPDATA/TheLastShift/output.log",
-            "log_append": False,
         }
     },
 )
