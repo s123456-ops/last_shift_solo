@@ -1,4 +1,4 @@
-"""THE LAST SHIFT, solo version: game entry point.
+"""NIGHT ROUNDS: game entry point.
 
 Usage:
     python main.py              (English, default)
@@ -7,7 +7,6 @@ Usage:
 
 import argparse
 import sys
-from pathlib import Path
 
 from panda3d.core import Filename, loadPrcFileData
 from ursina import Entity, Ursina, Vec2, application, color, held_keys, time, window
@@ -24,6 +23,7 @@ from core.documents import DocumentFormatError, load_documents
 from core.doors import MapWithDoors
 from core.facility import Facility
 from core.flashlight import Flashlight
+from core.game_info import GAME_TITLE
 from core.interactables import (
     BatteryPickup,
     Door,
@@ -88,7 +88,7 @@ MONSTER_PATROL = [
     (7, 8),
     (2, 15),
 ]
-CODE_END_DOCUMENT = (15, 28)  # Daniel Morel's journal gives the last digit
+CODE_END_DOCUMENT = (15, 28)  # Jonas Reyes's journal gives the last digit
 
 TITLE_CAMERA_START = (7, 2)  # start of the main corridor, to the west
 TITLE_CAMERA_END = (7, 18)  # the camera stops before reaching the silhouette
@@ -438,7 +438,7 @@ def start_game(
 
 
 def parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="THE LAST SHIFT")
+    parser = argparse.ArgumentParser(description=GAME_TITLE)
     parser.add_argument(
         "--lang",
         choices=SUPPORTED_LANGUAGES,
@@ -519,9 +519,7 @@ def run_safely() -> None:
     except SystemExit:
         raise
     except BaseException as error:
-        report = write_crash_report(
-            error, [LOG_FOLDER, ROOT]
-        )
+        report = write_crash_report(error, [LOG_FOLDER, ROOT])
         show_crash_message(report)
         raise
 

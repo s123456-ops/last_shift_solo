@@ -1,26 +1,28 @@
-"""Builds THE LAST SHIFT as a standalone game, with Panda3D's build_apps.
+"""Builds NIGHT ROUNDS as a standalone game, with Panda3D's build_apps.
 
 Usage (on Windows, from the project root, inside the virtual environment):
     pip install -r requirements.txt
     python setup.py bdist_apps
 
-The result is dist/THE_LAST_SHIFT-<version>_win_amd64.zip: unzip it anywhere and
-double-click "THE LAST SHIFT.exe". Players need nothing else installed.
+The result is dist/night_rounds-<version>_win_amd64.zip: unzip it anywhere and
+double-click "NIGHT ROUNDS.exe". Players need nothing else installed.
 """
 
 from setuptools import setup
 
-VERSION = "0.1.2"
+from core.game_info import GAME_TITLE
+
+VERSION = "0.1.3"
 
 setup(
-    name="THE_LAST_SHIFT",
+    name=GAME_TITLE.replace(" ", "_"),
     version=VERSION,
     options={
         "build_apps": {
             # a game window, without a console behind it
-            "gui_apps": {"THE LAST SHIFT": "main.py"},
+            "gui_apps": {GAME_TITLE: "main.py"},
             # the same game with a console window, to read errors on a tester's PC
-            "console_apps": {"THE LAST SHIFT (debug)": "main.py"},
+            "console_apps": {f"{GAME_TITLE} (debug)": "main.py"},
             # the game's data files, copied next to the executable
             "include_patterns": [
                 "levels/*.txt",

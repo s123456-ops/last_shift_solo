@@ -15,7 +15,7 @@
 5 21 crate_stack N
 5 23 crate N
 
-# Dr Saunier's office
+# Dr Halloway's office
 2 36 office_desk W
 1 31 filing_cabinet S
 3 34 chair N

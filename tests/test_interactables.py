@@ -108,7 +108,7 @@ def test_pickup_adds_the_item_to_the_inventory():
 
 def test_reading_the_code_note_teaches_the_code():
     player = make_player_with_low_battery()
-    Note((1, 1), "Note de Morel", "Code : 4 7 1", grants=CODE_START).interact(player)
+    Note((1, 1), "Note de Reyes", "Code : 4 7 1", grants=CODE_START).interact(player)
     assert player.inventory.has(CODE_START)
 
 

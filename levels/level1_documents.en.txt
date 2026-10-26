@@ -1,41 +1,41 @@
-[1, 17] Sticky note — exit hall
-Thomas,
-For the night rounds: always do B last.
-The noises in cell 3 are just the ventilation.
+[1, 17] Sticky note — admissions desk
+Elias,
+For the night rounds: always do Ward B last.
+The noises from isolation room 3 are just the pipes.
 That's what they say, anyway.
 — Front desk
 
 [5, 7] Incident report — CONFIDENTIAL
-HELIX BIOSYSTEMS
-Incident in Sector B, cell 3. Security guard T. Varenne exposed to compound L-7.
-Subject survived. Continuous regeneration observed.
-Electrical containment maintained. Do not inform the family.
-Recommendation: keep the site powered until further notice.
+HOLLOWMERE HOSPITAL — BOARD OF DIRECTORS
+Ward B, isolation room 3. The patient fought the injection: the full dose of compound C-7 went into night orderly E. Brandt.
+He survived. Continuous regeneration observed.
+Electric locks maintained. Do not inform the family.
+Recommendation: keep the ward powered until further notice.
 
-[15, 13] Dr. Hélène Saunier's journal
-Day 214. Subject 7 rebuilt his arm in nine hours.
-But it doesn't stop. The bones keep growing after healing.
-I asked to halt the Lazarus protocol.
+[15, 13] Dr Miriam Halloway's journal
+Day 214. The Calder protocol was meant to calm our patients. It calms nothing.
+Brandt rebuilt his arm in nine hours. The bones keep growing after healing.
+I asked the board to stop the trials.
 Denied.
 
-[15, 28] Daniel Morel's journal
+[15, 28] Jonas Reyes's journal
 Week 9.
 He only comes out when the power goes. The rest of the time, I hear him scratching behind the B doors.
 He knows my rounds.
 He walks like someone who has done this job.
 I changed the generator code. Last digit: 3.
-Like the cell.
+Like his room.
 
-[1, 33] Letter from Dr Saunier, never sent
-Mrs Varenne,
-You were told your son died in an accident on duty.
-That is not true. Thomas is alive, in Sector B, cell 3.
+[1, 33] Letter from Dr Halloway, never sent
+Mrs Brandt,
+You were told your son died in an accident at work.
+That is not true. Elias is alive, in Ward B, isolation room 3.
 I no longer know if it is still him.
 I am sorry.
-— H. Saunier
+— M. Halloway
 
-[3, 43] Plate — Cell 3
-SUBJECT 7 — VARENNE, T.
-Lazarus Protocol. Level 4 clearance.
+[3, 43] Plate — Isolation room 3
+ROOM 3 — BRANDT, E. (STAFF)
+Calder protocol. Restricted access.
 In case of power failure: do not open.
-He always comes back to his cell.
+He always comes back to his room.

@@ -1,4 +1,4 @@
--- THE LAST SHIFT: database for anonymous gameplay statistics (Supabase / PostgreSQL)
+-- NIGHT ROUNDS: database for anonymous gameplay statistics (Supabase / PostgreSQL)
 -- Run once in the Supabase SQL Editor to recreate the database from scratch.
 
 -- One row per game played

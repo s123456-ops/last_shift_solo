@@ -14,6 +14,7 @@ from ursina import (
     time,
 )
 
+from core.game_info import GAME_TITLE
 from core.texts import SUPPORTED_LANGUAGES, current_language, set_language, tr
 from view.settings import Setting
 
@@ -22,6 +23,7 @@ FADE_DURATION = 1.0  # seconds for each card to fade in and out
 HOLD_DURATION = 3.0  # seconds each card stays fully visible
 SKIP_KEYS = ("space", "enter")
 TITLE_BAND_OPACITY = 0.55
+END_DELAY = 0.1  # seconds before the finished intro is removed
 MODE_BUTTON = (0.42, 0.07)
 OPTION_BUTTON = (0.36, 0.06)
 
@@ -57,7 +59,7 @@ class TitleScreen(Entity):
         )
         band.alpha = TITLE_BAND_OPACITY
         Text(
-            "THE LAST SHIFT",
+            GAME_TITLE,
             parent=self,
             origin=(0, 0),
             y=0.18,
@@ -190,5 +192,8 @@ class IntroSequence(Entity):
         on_finish = self._on_finish  # kept before destroying the object
         for element in (self._background, self._card, self._hint):
             destroy(element)
-        destroy(self)
+        # Not destroyed right away: _finish() can run inside this entity's own
+        # update(), and Ursina keeps using the entity after update() returns.
+        # Destroying it there crashes the game when the intro is not skipped.
+        destroy(self, delay=END_DELAY)
         on_finish()

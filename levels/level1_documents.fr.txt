@@ -1,41 +1,41 @@
-[1, 17] Post-it — hall de sortie
-Thomas,
-Pour les rondes de nuit : le B toujours en dernier.
-Les bruits dans la cellule 3, c'est la ventilation.
+[1, 17] Post-it — bureau des admissions
+Elias,
+Pour les rondes de nuit : l'aile B toujours en dernier.
+Les bruits dans la chambre d'isolement 3, c'est la tuyauterie.
 C'est ce qu'ils disent, en tout cas.
 — Accueil
 
 [5, 7] Rapport d'incident — CONFIDENTIEL
-HELIX BIOSYSTEMS
-Incident Secteur B, cellule 3. Agent de sécurité T. Varenne exposé au composé L-7.
-Le sujet survit. Régénération continue observée.
-Confinement électrique maintenu. Ne pas informer la famille.
-Recommandation : site sous tension jusqu'à nouvel ordre.
+HÔPITAL DE HOLLOWMERE — CONSEIL D'ADMINISTRATION
+Aile B, chambre d'isolement 3. Le patient s'est débattu pendant l'injection : toute la dose de composé C-7 est allée dans le bras de l'infirmier de nuit E. Brandt.
+Il survit. Régénération continue observée.
+Verrous électriques maintenus. Ne pas informer la famille.
+Recommandation : aile sous tension jusqu'à nouvel ordre.
 
-[15, 13] Journal du Dr Hélène Saunier
-Jour 214. Le sujet 7 a reconstruit son bras en neuf heures.
-Mais il ne s'arrête pas. Les os continuent de pousser après la guérison.
-J'ai demandé l'arrêt du protocole Lazare.
+[15, 13] Journal du Dr Miriam Halloway
+Jour 214. Le protocole Calder devait apaiser nos patients. Il n'apaise rien.
+Brandt a reconstruit son bras en neuf heures. Les os continuent de pousser après la guérison.
+J'ai demandé au conseil l'arrêt des essais.
 Refusé.
 
-[15, 28] Journal de Daniel Morel
+[15, 28] Journal de Jonas Reyes
 Semaine 9.
 Il ne sort que quand le courant saute. Le reste du temps, je l'entends gratter derrière les portes du B.
 Il connaît mes rondes.
 Il marche comme quelqu'un qui a fait ce travail.
 J'ai changé le code du groupe électrogène. Dernier chiffre : 3.
-Comme la cellule.
+Comme sa chambre.
 
-[1, 33] Lettre du Dr Saunier, jamais envoyée
-Madame Varenne,
-On vous a dit que votre fils était mort dans un accident de service.
-C'est faux. Thomas est vivant, au Secteur B, cellule 3.
+[1, 33] Lettre du Dr Halloway, jamais envoyée
+Madame Brandt,
+On vous a dit que votre fils était mort dans un accident du travail.
+C'est faux. Elias est vivant, dans l'aile B, chambre d'isolement 3.
 Je ne sais plus si c'est encore lui.
 Je suis désolée.
-— H. Saunier
+— M. Halloway
 
-[3, 43] Plaque — Cellule 3
-SUJET 7 — VARENNE, T.
-Protocole Lazare. Accès niveau 4.
+[3, 43] Plaque — Chambre d'isolement 3
+CHAMBRE 3 — BRANDT, E. (PERSONNEL)
+Protocole Calder. Accès restreint.
 En cas de coupure : ne pas ouvrir.
-Il revient toujours à sa cellule.
+Il revient toujours à sa chambre.

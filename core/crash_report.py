@@ -10,6 +10,8 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
+from core.game_info import GAME_TITLE
+
 REPORT_NAME = "crash_log.txt"
 NATIVE_REPORT_NAME = "native_crash_log.txt"
 ENGINE_LOG_NAME = "engine_log.txt"
@@ -39,7 +41,7 @@ def format_report(error: BaseException) -> str:
     """The error, where it happened, and the player's system: all a bug report needs."""
     details = "".join(traceback.format_exception(error))
     return (
-        "THE LAST SHIFT crashed. Please send this file to the developer.\n\n"
+        f"{GAME_TITLE} crashed. Please send this file to the developer.\n\n"
         f"Date: {datetime.now():%Y-%m-%d %H:%M:%S}\n"
         f"System: {platform.platform()}\n"
         f"Python: {sys.version.split()[0]}\n\n"
@@ -50,13 +52,14 @@ def format_report(error: BaseException) -> str:
 def show_crash_message(path: Path | None) -> None:
     """A Windows message box telling the player where the report is."""
     where = str(path) if path else "(the report could not be written)"
-    text = f"Sorry, THE LAST SHIFT crashed.\n\nA report was saved here:\n{where}"
+    text = f"Sorry, {GAME_TITLE} crashed.\n\nA report was saved here:\n{where}"
     if sys.platform == "win32":
         import ctypes
 
-        ctypes.windll.user32.MessageBoxW(None, text, "THE LAST SHIFT", 0x10)
+        ctypes.windll.user32.MessageBoxW(None, text, GAME_TITLE, 0x10)
     else:
         print(text, file=sys.stderr)
+
 
 def enable_native_crash_log(folder: Path) -> Path:
     """Records crashes inside the engine (C++), which Python's try/except never sees.
@@ -66,6 +69,7 @@ def enable_native_crash_log(folder: Path) -> Path:
     global _native_log
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / NATIVE_REPORT_NAME
-    _native_log = open(path, "w", encoding="utf-8")
+    # left open on purpose: faulthandler writes in it when the game crashes
+    _native_log = open(path, "w", encoding="utf-8")  # noqa: SIM115
     faulthandler.enable(file=_native_log, all_threads=True)
     return path

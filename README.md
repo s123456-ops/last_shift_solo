@@ -1,10 +1,10 @@
-# THE LAST SHIFT
+# NIGHT ROUNDS
 
 A first-person horror game in Python, with a PS1 look.
 
-*Helix Institute, Sector B. Closed for six years. You are the new night watchman,
-and the power just went out. Something that used to work here is still walking
-the corridors.*
+*Hollowmere Psychiatric Hospital, Ward B. Closed for six years. You are the new
+night watchman, and the power just went out. Something that used to work here
+is still walking the corridors.*
 
 Restore the power and reach the exit before it finds you: find the fuse, piece
 together the generator code, open the security doors, and hide in the lockers
@@ -69,9 +69,9 @@ python main.py --lang fr    # French
 python setup.py bdist_apps
 ```
 
-This creates `dist/the_last_shift-<version>_win_amd64.zip`, built with Panda3D's
-`build_apps`. Players unzip it and run `THE LAST SHIFT.exe`: no Python needed.
-`THE LAST SHIFT (debug).exe` is the same game with a console, for testers.
+This creates `dist/night_rounds-<version>_win_amd64.zip`, built with Panda3D's
+`build_apps`. Players unzip it and run `NIGHT ROUNDS.exe`: no Python needed.
+`NIGHT ROUNDS (debug).exe` is the same game with a console, for testers.
 
 If the game crashes, a `logs/` folder next to the executable holds what is
 needed to fix it:
