@@ -11,3 +11,6 @@ dist/
 
 logs/
 crash_log.txt
+
+# secrets (clés Supabase)
+.env
