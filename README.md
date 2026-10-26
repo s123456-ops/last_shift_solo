@@ -31,6 +31,7 @@ a window.
   damaged walls, debris, fallen ceiling tiles, furniture, signs, ambient music.
 - **English and French**, chosen on the title screen.
 - **Options** at any time: brightness, volume, mouse sensitivity, PS1 style.
+- **A standalone Windows build**, with crash logs written next to the game.
 
 ## Requirements and installation
 
@@ -62,10 +63,29 @@ python main.py --lang fr    # French
 | M | evacuation plan (pauses the game) |
 | Esc | pause menu and options |
 
+## Building the Windows executable
+
+```bash
+python setup.py bdist_apps
+```
+
+This creates `dist/the_last_shift-<version>_win_amd64.zip`, built with Panda3D's
+`build_apps`. Players unzip it and run `THE LAST SHIFT.exe`: no Python needed.
+`THE LAST SHIFT (debug).exe` is the same game with a console, for testers.
+
+If the game crashes, a `logs/` folder next to the executable holds what is
+needed to fix it:
+
+| File | Content |
+| --- | --- |
+| `crash_log.txt` | a Python error, with its full traceback |
+| `native_crash_log.txt` | a crash inside the engine (graphics or sound driver) |
+| `engine_log.txt` | everything the engine reported while running |
+
 ## Running the tests
 
 ```bash
-python -m pytest     # 187 tests, about one second
+python -m pytest     # about 200 tests, about one second
 ruff check .
 ruff format .
 ```
@@ -81,9 +101,11 @@ view/       display and sound with Ursina; decides nothing
 levels/     the level as text files: map, documents, signs, furniture
 locales/    every displayed text, in English and French
 assets/     models, sounds and textures
+database/   the PostgreSQL schema for the gameplay statistics
 tools/      scripts that generate textures, signs, sounds and music
 tests/      pytest suite
 main.py     entry point: assembles the core and the view
+setup.py    builds the Windows executable
 ```
 
 ## Design choices
@@ -127,19 +149,22 @@ pip install numpy soundfile
 python -m tools.make_music         # ambient music
 ```
 
-## Roadmap
+## Roadmap: player metrics (in progress)
 
-**Player metrics.** The next big feature: record every run (duration, difficulty,
-the path taken, where the player died, how long they hid, how much they relied
-on the flashlight and the map) and turn it into analysis:
+The next version records how people play, to tune the game with data rather
+than guesswork: if most players die in the same corridor, that corridor needs
+another locker.
 
-- a heatmap of deaths and hiding spots over the building plan;
-- completion rates and average run time per difficulty;
-- the moments where players get lost or give up.
-
-The goal is to tune the game with data rather than guesswork: if most players
-die in the same corridor, that corridor needs another locker. The core already
-makes this easy, since every game event goes through `GameSession`.
+- [x] **Database**: PostgreSQL on Supabase (EU region), one table for runs and
+  one for events, with validation rules and Row Level Security: the game can
+  only add rows, never read them (`database/schema.sql`).
+- [x] **Run recorder** (`core/telemetry.py`): notes the steps reached, documents
+  read, hiding spots, map use and where the player was caught. Fully tested.
+- [ ] **Consent**: nothing is sent unless the player says yes; anonymous random
+  ID, no personal data, can be turned off at any time.
+- [ ] **Sending**: in the background, never slowing down or crashing the game.
+- [ ] **Dashboard** (Power BI): completion funnel, heatmap of captures on the
+  building plan, win rate and run time per difficulty.
 
 ## Credits
 
